@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.input.KeyCodeCombination?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.paint.Color?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cs250.paint.SceneController">
+   <children>
+      <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+                  <MenuItem fx:id="openButton" mnemonicParsing="false" onAction="#openDialog" text="Open">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem fx:id="saveButton" mnemonicParsing="false" onAction="#saveCanvas" text="Save">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem fx:id="saveAsButton" mnemonicParsing="false" onAction="#saveAsDialog" text="Save As">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="DOWN" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+              <MenuItem fx:id="quitButton" mnemonicParsing="false" onAction="#quitPaint" text="Quit Pain(t)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="W" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+            </items>
+          </Menu>
+            <Menu mnemonicParsing="false" text="Canvas">
+              <items>
+                <MenuItem mnemonicParsing="false" onAction="#resizeCanvas" text="Resize Canvas" />
+              </items>
+            </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+                  <MenuItem mnemonicParsing="false" onAction="#easterEgg" text="What is Java?" />
+              <MenuItem fx:id="aboutButton" mnemonicParsing="false" onAction="#aboutMessage" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <ToolBar layoutY="28.0" prefHeight="35.0" prefWidth="200.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="28.0">
+         <items>
+            <Label text="Tool:" />
+            <ChoiceBox fx:id="toolChoice" />
+            <Separator orientation="VERTICAL" />
+            <Label text="Width:" />
+            <Spinner fx:id="toolWidthSpinner" prefWidth="70.0" />
+            <Separator orientation="VERTICAL" />
+            <Label text="Color:" />
+            <ColorPicker fx:id="colorPicker" onAction="#setColor">
+               <value>
+                  <Color />
+               </value></ColorPicker>
+            <Separator orientation="VERTICAL" />
+            <CheckBox fx:id="dashingCheckBox" mnemonicParsing="false" onAction="#dashingCheckToggled" text="Dashed Lines" />
+         </items>
+      </ToolBar>
+      <TabPane tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="63.0">
+         <tabs>
+            <Tab text="Canvas">
+               <content>
+                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="0.0" prefWidth="0.0">
+                     <content>
+                        <StackPane prefHeight="0.0" prefWidth="0.0" style="-fx-background-color: lightgray;">
+                           <children>
+                              <Canvas fx:id="canvas" height="600.0" onMouseDragged="#onCanvasMouseDragged" onMousePressed="#onCanvasMousePressed" onMouseReleased="#onCanvasMouseReleased" width="800.0" />
+                           </children>
+                        </StackPane>
+                     </content>
+                  </ScrollPane>
+               </content>
+            </Tab>
+         </tabs>
+      </TabPane>
+   </children>
+</AnchorPane>
