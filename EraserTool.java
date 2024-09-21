@@ -1,15 +1,10 @@
-package cs250.paint;
+package cs250.paint.PaintTools;
 
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 
 import static javafx.scene.paint.Color.WHITE;
 
-public class EraserTool extends PaintTool{
-    EraserTool(GraphicsContext graphicsContext, Color toolColor, int toolWidth) {
-        super(graphicsContext, toolColor, toolWidth);
-    }
+public class EraserTool extends PaintTool {
 
     public void onMousePressed(MouseEvent mouseEvent) {
         //Eraser will get rid of color by changing anything to white
@@ -18,6 +13,9 @@ public class EraserTool extends PaintTool{
 
         //Manually updating eraser width
         graphicsContext.setLineWidth(toolWidth);
+
+        //Manually setting telling the eraser tool to not have any dashes
+        graphicsContext.setLineDashes((double[]) null);
 
         //Resetting the line path for a new line of erasing
         graphicsContext.beginPath();

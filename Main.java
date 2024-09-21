@@ -26,6 +26,7 @@ public class Main extends Application {
         SceneController controller = fxmlLoader.getController();
         // Pass the Stage to the controller
         controller.setStage(stage);
+        controller.postInitialization();
 
         //Setting window title and populating program icon from resources folder
         stage.setTitle("Pain(t)");
@@ -36,4 +37,5 @@ public class Main extends Application {
         stage.setScene(scene);
         stage.show();
     }
+
 }

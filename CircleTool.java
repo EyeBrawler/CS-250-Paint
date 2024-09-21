@@ -1,16 +1,10 @@
-package cs250.paint;
+package cs250.paint.PaintTools;
 
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 
-public class CircleTool extends PaintTool{
+public class CircleTool extends PaintTool {
     //upperLeftX is the upper left of the ellipse and where the user starts dragging
     double upperLeftX, upperLeftY, endX;
-
-    CircleTool(GraphicsContext graphicsContext, Color toolColor, int toolWidth) {
-        super(graphicsContext, toolColor, toolWidth);
-    }
 
     public void onMousePressed(MouseEvent mouseEvent) {
         upperLeftX = mouseEvent.getX();

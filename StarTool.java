@@ -1,21 +1,18 @@
-package cs250.paint;
+package cs250.paint.PaintTools;
 
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 
 public class StarTool extends PaintTool {
     double[] xPoints;
     double[] yPoints;
     double starCenterX;
     double starCenterY;
+    static final int NUMBER_OF_VERTICES = 10;
 
-    StarTool(GraphicsContext graphicsContext, Color toolColor, int toolWidth) {
-        super(graphicsContext, toolColor, toolWidth);
-
-        //Initializing the arrays to have a size of 3 for each point of the triangle
-        xPoints = new double[10];
-        yPoints = new double[10];
+    public StarTool() {
+        //Initializing the arrays to have a size of 10 for each point of the star
+        xPoints = new double[NUMBER_OF_VERTICES];
+        yPoints = new double[NUMBER_OF_VERTICES];
     }
 
     public void onMousePressed(MouseEvent mouseEvent) {
@@ -38,7 +35,7 @@ public class StarTool extends PaintTool {
         calculateStar(mouseEvent);
 
         //Drawing the star temporarily
-        graphicsContext.strokePolygon(xPoints, yPoints, 10);
+        graphicsContext.strokePolygon(xPoints, yPoints, NUMBER_OF_VERTICES);
 
     }
 
@@ -50,10 +47,13 @@ public class StarTool extends PaintTool {
         calculateStar(mouseEvent);
 
         //Drawing the star permanently
-        graphicsContext.strokePolygon(xPoints, yPoints, 10);
+        graphicsContext.strokePolygon(xPoints, yPoints, NUMBER_OF_VERTICES);
     }
 
     public void calculateStar(MouseEvent mouseEvent) {
+        //See line below for variables use
+        final int SUCCESSIVE_VERTEX_ANGLE = 36;
+
         //Index 0 is the top vertex of the star
         xPoints[0] = mouseEvent.getX();
         yPoints[0] = mouseEvent.getY();
@@ -68,9 +68,9 @@ public class StarTool extends PaintTool {
 
         // Angle between successive vertices (36 degrees in radians)
         //Needs to be converted from degrees to radians for calculation
-        double angleStep = Math.toRadians(36);
+        double angleStep = Math.toRadians(SUCCESSIVE_VERTEX_ANGLE);
 
-        for (int i = 1; i < 10; i++) {
+        for (int i = 1; i < NUMBER_OF_VERTICES; i++) {
             // Determine whether the current vertex is an outer or inner vertex
             double radius = (i % 2 == 0) ? outerRadius : innerRadius;
 

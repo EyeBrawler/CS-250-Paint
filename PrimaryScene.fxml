@@ -1,36 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.canvas.Canvas?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.CustomMenuItem?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.paint.Color?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cs250.paint.SceneController">
+<AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cs250.paint.SceneController">
    <children>
       <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
-                  <MenuItem fx:id="openButton" mnemonicParsing="false" onAction="#openDialog" text="Open">
+                  <MenuItem mnemonicParsing="false" onAction="#openNewTabDialog" text="Open  in New Tab">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
+                  <MenuItem fx:id="openButton" mnemonicParsing="false" onAction="#openDialog" text="Open in Current Tab">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="DOWN" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="saveButton" mnemonicParsing="false" onAction="#saveCanvas" text="Save">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
@@ -42,17 +50,56 @@
                      </accelerator>
                   </MenuItem>
                   <SeparatorMenuItem mnemonicParsing="false" />
-              <MenuItem fx:id="quitButton" mnemonicParsing="false" onAction="#quitPaint" text="Quit Pain(t)">
+                  <MenuItem mnemonicParsing="false" onAction="#closeTab" text="Close">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="W" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+              <MenuItem fx:id="quitButton" mnemonicParsing="false" onAction="#quitPaint" text="Quit Pain(t)">
+                     <accelerator>
+                        <KeyCodeCombination alt="DOWN" code="F4" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
             </items>
           </Menu>
+            <Menu mnemonicParsing="false" text="Edit">
+              <items>
+                  <MenuItem mnemonicParsing="false" onAction="#undo" text="Undo">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="Z" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#redo" text="Redo">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="Z" control="DOWN" meta="UP" shift="DOWN" shortcut="UP" />
+                     </accelerator></MenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <CheckMenuItem fx:id="cutModeCheckBox" mnemonicParsing="false" onAction="#cutSelectionToggle" text="Cut Selections" />
+              </items>
+            </Menu>
             <Menu mnemonicParsing="false" text="Canvas">
               <items>
+                  <MenuItem mnemonicParsing="false" onAction="#clearCanvas" text="Clear Canvas" />
                 <MenuItem mnemonicParsing="false" onAction="#resizeCanvas" text="Resize Canvas" />
               </items>
+            </Menu>
+            <Menu mnemonicParsing="false" text="Shapes">
+               <items>
+                  <CustomMenuItem mnemonicParsing="false" text="Polygon Sides">
+                     <content>
+                        <HBox spacing="5.0">
+                           <children>
+                              <Label text="Polygon Sides:" textFill="#010101">
+                                 <HBox.margin>
+                                    <Insets top="3.0" />
+                                 </HBox.margin>
+                              </Label>
+                              <Spinner fx:id="polygonSideSpinner" />
+                           </children>
+                        </HBox>
+                     </content>
+                  </CustomMenuItem>
+               </items>
             </Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
@@ -64,8 +111,21 @@
       </MenuBar>
       <ToolBar layoutY="28.0" prefHeight="35.0" prefWidth="200.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="28.0">
          <items>
-            <Label text="Tool:" />
-            <ChoiceBox fx:id="toolChoice" />
+            <Label text="Image Tools:" />
+            <ToggleButton fx:id="selectAreaButton" mnemonicParsing="false" onAction="#setToolbarTool" selected="true" text="Select Area">
+               <toggleGroup>
+                  <ToggleGroup fx:id="toolbarToggleGroup" />
+               </toggleGroup>
+            </ToggleButton>
+            <ToggleButton fx:id="textInsertButton" mnemonicParsing="false" onAction="#setToolbarTool" text="Text" toggleGroup="$toolbarToggleGroup" />
+            <Separator orientation="VERTICAL" />
+            <Label text="Drawing Tools:" />
+            <ToggleButton fx:id="lineButton" mnemonicParsing="false" onAction="#setToolbarTool" text="Line" toggleGroup="$toolbarToggleGroup" />
+            <ToggleButton fx:id="pencilButton" mnemonicParsing="false" onAction="#setToolbarTool" text="Pencil" toggleGroup="$toolbarToggleGroup" />
+            <ToggleButton fx:id="eraserButton" mnemonicParsing="false" onAction="#setToolbarTool" text="Eraser" toggleGroup="$toolbarToggleGroup" />
+            <Separator orientation="VERTICAL" />
+            <Label text="Shape Tools:" />
+            <ChoiceBox fx:id="shapeToolChoice" />
             <Separator orientation="VERTICAL" />
             <Label text="Width:" />
             <Spinner fx:id="toolWidthSpinner" prefWidth="70.0" />
@@ -79,22 +139,6 @@
             <CheckBox fx:id="dashingCheckBox" mnemonicParsing="false" onAction="#dashingCheckToggled" text="Dashed Lines" />
          </items>
       </ToolBar>
-      <TabPane tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="63.0">
-         <tabs>
-            <Tab text="Canvas">
-               <content>
-                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="0.0" prefWidth="0.0">
-                     <content>
-                        <StackPane prefHeight="0.0" prefWidth="0.0" style="-fx-background-color: lightgray;">
-                           <children>
-                              <Canvas fx:id="canvas" height="600.0" onMouseDragged="#onCanvasMouseDragged" onMousePressed="#onCanvasMousePressed" onMouseReleased="#onCanvasMouseReleased" width="800.0" />
-                           </children>
-                        </StackPane>
-                     </content>
-                  </ScrollPane>
-               </content>
-            </Tab>
-         </tabs>
-      </TabPane>
+      <TabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="63.0" />
    </children>
 </AnchorPane>

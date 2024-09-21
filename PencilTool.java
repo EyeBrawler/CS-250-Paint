@@ -1,13 +1,8 @@
-package cs250.paint;
+package cs250.paint.PaintTools;
 
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 
-public class PencilTool extends PaintTool{
-    PencilTool(GraphicsContext graphicsContext, Color toolColor, int toolWidth) {
-        super(graphicsContext, toolColor, toolWidth);
-    }
+public class PencilTool extends PaintTool {
 
     public void onMousePressed(MouseEvent mouseEvent) {
         //Making sure the brush has updated color and width information

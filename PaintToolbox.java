@@ -1,5 +1,6 @@
 package cs250.paint;
 
+import cs250.paint.PaintTools.*;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
@@ -9,32 +10,27 @@ import java.util.*;
 //It is also the place where instances of tools of different types are constructed
 public class PaintToolbox {
 
-    //List all paint tools are stored in
-    private final ArrayList<PaintTool> paintTools;
+    //List all shape paint tools are stored in
+    private final ArrayList<PaintTool> shapePaintTools;
 
     private PaintTool activeTool;
 
     //Information that all tools in the toolbox need initially
     //Getting the color picker so current colors can be found for tools in the toolbox
     //Variables that will have values brought in from Scene Controller
-    public PaintToolbox(GraphicsContext graphicsContext, Color toolColor, int toolWidth) {
+    public PaintToolbox() {
         //Toolbox Setup
-        paintTools = new ArrayList<>();
-
-        //Adding various tools to the list of tools
-        //Lines
-        paintTools.add(new LineTool(graphicsContext, toolColor, toolWidth));
-        paintTools.add(new PencilTool(graphicsContext, toolColor, toolWidth));
-        paintTools.add(new EraserTool(graphicsContext, toolColor, toolWidth));
+        shapePaintTools = new ArrayList<>();
 
         //Shapes
-        paintTools.add(new RectangleTool(graphicsContext, toolColor, toolWidth));
-        paintTools.add(new SquareTool(graphicsContext, toolColor, toolWidth));
-        paintTools.add(new EllipseTool(graphicsContext, toolColor, toolWidth));
-        paintTools.add(new CircleTool(graphicsContext, toolColor, toolWidth));
-        paintTools.add(new TriangleTool(graphicsContext, toolColor, toolWidth));
-        paintTools.add(new StarTool(graphicsContext, toolColor, toolWidth));
-
+        shapePaintTools.add(new RectangleTool());
+        shapePaintTools.add(new SquareTool());
+        shapePaintTools.add(new EllipseTool());
+        shapePaintTools.add(new CircleTool());
+        shapePaintTools.add(new TriangleTool());
+        shapePaintTools.add(new RightTriangleTool());
+        shapePaintTools.add(new StarTool());
+        shapePaintTools.add(new PolygonTool());
 
     }
 
@@ -43,7 +39,8 @@ public class PaintToolbox {
         return activeTool;
     }
 
-    public void setActiveTool(PaintTool activeTool, Color toolColor, int toolWidth, boolean lineDashing) {
+    public void setActiveTool(PaintTool activeTool, GraphicsContext graphicsContext, Color toolColor, int toolWidth,
+                              boolean lineDashing) {
         this.activeTool = activeTool;
 
         //Tool color and width are brought in from the scene controller to update these attributes even when the
@@ -51,11 +48,12 @@ public class PaintToolbox {
         this.activeTool.setToolColor(toolColor);
         this.activeTool.setToolWidth(toolWidth);
         this.activeTool.setLineDashing(lineDashing);
+        this.activeTool.setGraphicsContext(graphicsContext);
 
     }
 
-    public List<PaintTool> getPaintTools() {
-        return paintTools;
+    public List<PaintTool> getShapeTools() {
+        return shapePaintTools;
     }
 
 }

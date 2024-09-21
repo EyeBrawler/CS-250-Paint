@@ -1,15 +1,9 @@
-package cs250.paint;
+package cs250.paint.PaintTools;
 
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 
-public class LineTool extends PaintTool{
+public class LineTool extends PaintTool {
     private double startX, startY, endX, endY;
-
-    LineTool(GraphicsContext graphicsContext, Color toolColor, int toolWidth) {
-        super(graphicsContext, toolColor, toolWidth);
-    }
 
     public void onMousePressed(MouseEvent mouseEvent) {
         startX = mouseEvent.getX();

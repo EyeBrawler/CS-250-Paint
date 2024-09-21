@@ -1,4 +1,4 @@
-package cs250.paint;
+package cs250.paint.PaintTools;
 
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.GraphicsContext;
@@ -6,7 +6,8 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
-//The PaintTools class simply holds all the code for tools contained in the toolChoice ChoiceBox
+//The PaintTools class simply holds all the code for tools contained in the toolChoice ChoiceBox and tools
+//within toggle buttons
 public abstract class PaintTool {
 
     //To ensure that these components can be accessed by all paint tools, but not too much else, they are protected
@@ -19,13 +20,8 @@ public abstract class PaintTool {
     //Allows actively seeing shapes/lines before they are drawn
     protected WritableImage copiedCanvasImage;
 
-    PaintTool(GraphicsContext graphicsContext, Color toolColor, int toolWidth) {
-        //Creating a graphics context object that all tools will be able to use
-        //Because paint tools  are constructed in the toolbox, these variables come from there
-        this.graphicsContext = graphicsContext;
-        this.toolColor = toolColor;
-        this.toolWidth = toolWidth;
-    }
+    //The PaintTool uses the zero parameter constructor because all tool attributes are updated during drawing, not
+    //When the object is initialized
 
     public void setToolColor(Color toolColor) {
         this.toolColor = toolColor;
@@ -37,6 +33,10 @@ public abstract class PaintTool {
 
     public void setLineDashing(boolean lineDashing) {
         this.lineDashing = lineDashing;
+    }
+
+    public void setGraphicsContext(GraphicsContext graphicsContext) {
+        this.graphicsContext = graphicsContext;
     }
 
     //Method to update the toolColor and toolWidth for a brush

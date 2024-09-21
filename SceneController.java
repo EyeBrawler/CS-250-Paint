@@ -1,107 +1,139 @@
 package cs250.paint;
 
+import cs250.paint.PaintTools.*;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.image.*;
-import javafx.scene.image.Image;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
-import javafx.stage.FileChooser;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.stage.WindowEvent;
-import javafx.util.Pair;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.lang.String;
 import java.util.Optional;
 
-import static javafx.scene.paint.Color.WHITE;
 
 public class SceneController {
 
     //Reference to stage
     private Stage stage;
 
-    //The Canvas
-    @FXML private Canvas canvas;
+    //The main anchor pane that all components stem from
+    //Injected so that the stage can be retrieved
+    @FXML AnchorPane mainPane;
 
-    //Flag to check if canvas has been modified
-    //Exists for saving purposes
-    private boolean unsavedChanges;
+    //The Tab Pane in where tabs for different open canvas' are
+    @FXML TabPane tabPane;
 
-    //Canvas Graphics Context (Enables drawing to canvas)
-    private GraphicsContext graphicsContext;
+    //This value will come from the CanvasTabManager Class
+    private CanvasTabManager canvasTabManager;
 
-    //Current Open File
-    //Contains information such as open file's path and name
-    private File openFile;
+    //Class variable to store a fileManager object
+    //The file manager class has methods for completing file operations such as loading and saving files
+    private FileManager fileManager;
+
+    //Menu Bar Nodes
+    //Controls the number of sides used by the polygon tool
+    @FXML private Spinner<Integer> polygonSideSpinner;
+    private static final int MAX_POLYGON_SIDES = 9999 ;
+    private static final int MIN_POLYGON_SIDES = 3;
+    private static final int DEFAULT_POLYGON_SIDES = 3;
 
     //Toolbar Items
-    @FXML private ChoiceBox<PaintTool> toolChoice;
+    //These objects control many of the paint tool attributes
+    @FXML private ChoiceBox<PaintTool> shapeToolChoice;
     @FXML private Spinner<Integer> toolWidthSpinner;
     @FXML private ColorPicker colorPicker;
     @FXML private CheckBox dashingCheckBox;
+    //Toggle Group for toolbar buttons
+    //Enables the selection of one button to disable the selection of others
+    //The image tool and drawing tool buttons fall into this group
+    @FXML private ToggleGroup toolbarToggleGroup;
+
+    //The toolbar buttons themselves
+    //They are being injected into this class from the FXML so that tool objects can be added to their user data
+    @FXML private ToggleButton selectAreaButton;
+    @FXML private ToggleButton textInsertButton;
+    @FXML private ToggleButton lineButton;
+    @FXML private ToggleButton pencilButton;
+    @FXML private ToggleButton eraserButton;
+
+    //Check box to toggle if selection tool is in cut or copy mode
+    @FXML private CheckMenuItem cutModeCheckBox;
 
 
     //Variables to set tool width limits
-    private static final int minToolWidth = 1;
-    private static final int maxToolWidth = 1024;
+    private static final int MIN_TOOL_WIDTH = 1;
+    private static final int MAX_TOOL_WIDTH = 1024;
+
+    private static final int DEFAULT_TOOL_WIDTH = 10;
 
     //The paintToolbox to manage paint tools
     PaintToolbox paintToolbox;
 
 
     //Function ran by JavaFX after the scene is loaded
+    //This contains a significant amount of miscellaneous setup code.
     @FXML
     private void initialize() {
-        //Getting the canvas' graphics context
-        graphicsContext = canvas.getGraphicsContext2D();
+        //Creating an instance of my paintToolbox class
+        //It stores all the paint tools and manages which one is active
+        paintToolbox = new PaintToolbox();
 
-        //Setting the canvas to white so that it can be differentiated from background and compatible with eraser.
-        //Also allows for compatibility when copying canvas in specific tool operations
-        graphicsContext.setFill(WHITE);
-        graphicsContext.fillRect(0,0,canvas.getWidth(), canvas.getHeight());
+        //Creating an instance of the CanvasTabManager class
+        //It contains a reference to the tabPane and
+        canvasTabManager = new CanvasTabManager(tabPane, paintToolbox);
 
         //Method that runs to set up the tool width spinner in the toolbar
         setupToolWidthSpinner();
+        //Method for doing the same to the spinner in the shape category of the menu bar
+        setupPolygonSideSpinner();
 
-        //Creating an instance of my paintToolbox class and
-        //All tools need to have access to the graphics context, color picker, and tool width
-        paintToolbox = new PaintToolbox(graphicsContext, colorPicker.getValue(), toolWidthSpinner.getValue());
+        //Setting up the shape Tool Choice ChoiceBox for tool selection
+        shapeToolChoice.getItems().addAll(paintToolbox.getShapeTools());
 
-        //Setting up toolChoice ChoiceBox for tool selection
-        toolChoice.getItems().addAll(paintToolbox.getPaintTools());
-        toolChoice.setOnAction(this::setTool); //Using the :: method reference operator to link method to ChoiceBox
+        //To have an item selected by default for the shape tools, the first item in tool list is selected
+        //with the setValue method
+        shapeToolChoice.setValue(paintToolbox.getShapeTools().getFirst());
+        //Using the :: method reference operator to link method to ChoiceBox
+        shapeToolChoice.setOnAction(this::setShapeTool);
 
-        //To have an item selected by default, the first item in tool list is selected with the setValue method
-        toolChoice.setValue(paintToolbox.getPaintTools().getFirst());
 
+        //Adding user data to the toggle buttons in the toolbar
+        //Allows a tool object to be associated with a particular button
+        selectAreaButton.setUserData(new SelectTool());
+        textInsertButton.setUserData(new TextTool());
+        lineButton.setUserData(new LineTool());
+        pencilButton.setUserData(new PencilTool());
+        eraserButton.setUserData(new EraserTool());
+
+        //Setting the initial tool from the button which is currently active
+        //All the parameters necessary for the tool are passed in as values
+        //The first PaintTool parameter is type cast so because the user data from the toggle group returns just an
+        // object.
+        paintToolbox.setActiveTool((PaintTool) toolbarToggleGroup.getSelectedToggle().getUserData(),
+                canvasTabManager.getActiveTab().getGraphicsContext(), colorPicker.getValue(),
+                toolWidthSpinner.getValue(), dashingCheckBox.isSelected());
+
+    }
+
+    public void postInitialization() {
+        //Running smartSaveSetup() method
+        //It allows a confirmation dialog box when the user has modified the canvas but not yet saved.
+        //It is occurring here because this is the next code that runs after the initialize method.
+        smartSaveSetup();
+
+        //Because the file manager needs access to the stage and the stage is not available until postInitialization,
+        //The fileManager is initialized here
+        fileManager = new FileManager(canvasTabManager, stage);
     }
 
     //Setter method to inject the Stage into this class
     //Called in main class
     public void setStage(Stage stage) {
         this.stage = stage;
-
-        //Running smartSaveSetup() method
-        //It allows a confirmation dialog box when the user has modified the canvas but not yet saved.
-        //It is occurring here because this is the next code that runs after the initialize method.
-        smartSaveSetup();
     }
 
     //Method for the about popup that can be found in the menu bar
@@ -109,7 +141,7 @@ public class SceneController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("About");
         alert.setHeaderText("Pain(t)");
-        alert.setContentText("Version 0.3\nPain(t) is a less professional recreation of MS Paint" +
+        alert.setContentText("Version 0.4\nPain(t) is a less professional recreation of MS Paint" +
                 "\nCreated By Sam Thyen");
 
         alert.showAndWait();
@@ -118,235 +150,103 @@ public class SceneController {
 
     //Method for opening an image file.
     public void openDialog() {
-        Image openedImage = null;
-        boolean newImageOpened = false;
+        //Warning the user that opening an image in the current tab will overwrite unsaved changes
+        if(canvasTabManager.getActiveTab().hasUnsavedChanges()) {
+            //Constructing a confirmation alert
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Are you sure?");
+            alert.setHeaderText("Opening an image in a tab will overwrite your unsaved changes.");
+            alert.setContentText("Do you want to open an image in this tab?");
 
-        FileChooser fileChooser = new FileChooser();
+            alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
 
-        //Filter Used for Image Extensions in file choosing window
-        //Setting up the imageExtension filter (for all image types)
-        FileChooser.ExtensionFilter imageExtensionFilter =
-                new FileChooser.ExtensionFilter("Pain(t) Image Files", "*.jpg", "*.png", "*.bmp");
-        fileChooser.setTitle("Open File");
+            Optional<ButtonType> result = alert.showAndWait();
 
-        //Adding filter to fileChooser to enable sorting by image
-        fileChooser.getExtensionFilters().addAll(imageExtensionFilter);
+            //result should always be present
+            //If not, something is very wrong
+            if (result.isPresent()) {
 
-        //Trying to Select a File
-        openFile = fileChooser.showOpenDialog(stage);
+                //Dialog Box Outcomes
+                if (result.get() == ButtonType.YES) {
+                    //user chooses yes
+                    fileManager.openImage(canvasTabManager.getActiveTab());
 
-        //Try Catch is to handle any errors that occur in opening the image.
-        if(openFile != null) {
-            try {
-                //Creating FileInputStream from the file.
-                FileInputStream inputStream = new FileInputStream(openFile);
-                //Using that stream to try to construct an image object
-                openedImage = new Image(inputStream);
-
-                newImageOpened = true;
-
-            } catch (Exception e) {
-                //This code creates an error alert box for user notification
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("ERROR");
-                alert.setHeaderText("File Not Found Error");
-                alert.setContentText("There was an error loading the selected file as an image.");
-
-                alert.showAndWait();
+                } //If user chooses no, we do nothing.
             }
+        } else {
+            fileManager.openImage(canvasTabManager.getActiveTab());
         }
+    }
 
-        if(newImageOpened) {
-            //Resizing Canvas to properly fit new image
-            canvas.setHeight(openedImage.getHeight());
-            canvas.setWidth(openedImage.getWidth());
+    public void openNewTabDialog() {
+        //Making a new tab
+        canvasTabManager.newTab();
 
-            //Drawing Image to graphics context
-            graphicsContext.drawImage(openedImage, 0, 0);
-        }
+        //Opening an image in that new tab
+        fileManager.openImage(canvasTabManager.getLastCanvasTab());
 
+        //Switching to the tab where the image has been opened
+        //The -2 exists because the size is always 1 larger than the max index and the last tab is the add tab button
+        tabPane.getSelectionModel().select(tabPane.getTabs().size() - 2);
     }
 
     public void saveAsDialog() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save As");
-
-        //Creating file extension filters specifically for saving individual file types
-        FileChooser.ExtensionFilter pngExtensionFilter =
-                new FileChooser.ExtensionFilter("PNG File", "*.png");
-        FileChooser.ExtensionFilter jpgExtensionFilter =
-                new FileChooser.ExtensionFilter("JPG File", "*.jpg");
-        FileChooser.ExtensionFilter bmpExtensionFilter =
-                new FileChooser.ExtensionFilter("BMP File", "*.bmp");
-
-        //Adding filters just created for choosing a file of a specific extension
-        fileChooser.getExtensionFilters().addAll(pngExtensionFilter, jpgExtensionFilter, bmpExtensionFilter);
-
-        //Loading the file chooser and having it try to return a file for saving to a file object
-        openFile = fileChooser.showSaveDialog(stage);
-
-        //Calling the saveCanvas() method if a file for saving has been selected.
-        if(openFile != null) {
-            saveCanvas();
-        }
+        fileManager.saveAsDialog();
     }
 
 
     public void saveCanvas() {
-        //Forcing Save As Dialog when there is no openFile to write over
-        //Allows the user to pick a file extension
-        //Also prevents not knowing image type for saving.
-
-        if(openFile == null) {
-            saveAsDialog();
-
-        } else {
-            String fileName = openFile.getName();
-            String fileExtension = getFileExtension(fileName);
-
-            //WritableImage is the image format the screenshot function uses
-            //Taking a screenshot of the canvas is how the image will be saved
-            WritableImage writableImage = canvas.snapshot(null,null);
-
-            //Buffered Images have a type, this type will determine if imageIO can work with it.
-            //ARGB is for PNG
-            //RGB is for JPG and BMP
-            //It is likely created originally with ARGB
-            BufferedImage bufferedImage = SwingFXUtils.fromFXImage(writableImage, null);
-
-            //Convert to correct type by redrawing if not png
-            if(!"png".equals(fileExtension)) {
-                //Creating the temporary buffered image needed for redrawing
-                BufferedImage tempBufferedImage = new BufferedImage(bufferedImage.getWidth(),
-                        bufferedImage.getHeight(),
-                        BufferedImage.TYPE_INT_RGB);
-
-                //Redrawing with Graphics2D
-                Graphics2D tempGraphics = tempBufferedImage.createGraphics();
-                tempGraphics.drawImage(bufferedImage, 0, 0, null);
-                tempGraphics.dispose();
-
-                bufferedImage = tempBufferedImage;
-            }
-
-            //Checking if the fileExtension exists and then writing the file using the buffered image
-            if(fileExtension != null) {
-                try {
-                    // Write the image to the file using the appropriate format
-                    ImageIO.write(bufferedImage, fileExtension, openFile);
-                } catch (IOException e) {
-                    //Displaying Error Message when writing fails
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("ERROR");
-                    alert.setHeaderText("File Failed to Save");
-                    alert.setContentText("There was an error saving the canvas to an image file.");
-
-                    alert.showAndWait();
-                }
-            }
-        }
+        fileManager.saveCanvas();
     }
 
+    public void undo() {
+        canvasTabManager.getActiveTab().undo();
+    }
+    public void redo() {
+        canvasTabManager.getActiveTab().redo();
+    }
 
-    //Static Method for getting a file name extension from a file name string
-    private static String getFileExtension(String fileName) {
-        //Searching for character with last dot and saving its spot
-        int dotIndex = fileName.lastIndexOf(".") + 1;
-
-        //Checking if dot is in a valid position (no weirdness with hidden files and files that end with ".")
-        if(dotIndex > 0 && dotIndex < fileName.length() - 1) {
-            //Extracting the valid extension as lowercase
-            return fileName.substring(dotIndex).toLowerCase();
-        } else {
-            //In case no extension was found
-            return null;
+    public void cutSelectionToggle() {
+        if(paintToolbox.getActiveTool() instanceof SelectTool) {
+            ((SelectTool) paintToolbox.getActiveTool()).setCutMode(cutModeCheckBox.isSelected());
         }
     }
 
     //This function creates a custom dialog box where the user can resize the canvas.
+    //See canvas tab manager for more details
     public void resizeCanvas() {
-        //Creating a custom dialog box for this
-        //It uses the pair class to store two double values, the whole key pair thing doesn't make to much sense
-        // logically but the first value is canvas width and the second is canvas height.
-        Dialog<Pair<Double, Double>> resizeDialog = new Dialog<>();
-
-        //Dialog's text
-        resizeDialog.setTitle("Resize Canvas");
-        resizeDialog.setHeaderText("Enter the width and height you would like to resize the canvas to.\n" +
-                "WARNING: Resizing the canvas smaller will result in cropping.\n\n" +
-                "Current Size: " + canvas.getWidth() + "x" + canvas.getHeight());
-
-        //Making the resize button for the dialog
-        //It must be a custom button for the text "resize"
-        ButtonType resizeButtonType = new ButtonType("Resize", ButtonBar.ButtonData.OK_DONE);
-
-        //Adding the new button and a cancel button to the dialog
-        resizeDialog.getDialogPane().getButtonTypes().addAll(resizeButtonType, ButtonType.CANCEL);
-
-        //Making textFields for the dialog box where the user can enter values
-        TextField widthField = new TextField();
-        widthField.setPromptText("Width");
-
-        TextField heightField= new TextField();
-        heightField.setPromptText("Height");
-
-        //Setting up a grid layout for the dialog box to use
-        GridPane gridLayout = new GridPane();
-        gridLayout.setHgap(10);
-        gridLayout.setVgap(10);
-
-        //Adding the components to the layout
-        gridLayout.add(new Label("Width: "),0,0);
-        gridLayout.add(widthField, 1, 0);
-        gridLayout.add(new Label("Height: "), 0, 1);
-        gridLayout.add(heightField, 1, 1);
-
-        //Adding the layout to the dialog window
-        resizeDialog.getDialogPane().setContent(gridLayout);
-
-        //Code to try to convert user input values and convert them to doubles
-        //dialogButton is the button the user clicked
-        resizeDialog.setResultConverter(dialogButton -> {
-            if(dialogButton == resizeButtonType) {
-                try {
-                    double newWidth = Double.parseDouble(widthField.getText());
-                    double newHeight = Double.parseDouble(heightField.getText());
-                    return new Pair<>(newWidth, newHeight);
-                } catch(NumberFormatException e) {
-                    //Handling bad input from the user
-                    Alert alert = new Alert(Alert.AlertType.ERROR,
-                            "Please enter valid numbers for width and height.");
-                    alert.showAndWait();
-                    return null;
-                }
-            }
-            return null;
-        });
-
-        //Show the dialog
-        Optional<Pair<Double, Double>> resizeResult = resizeDialog.showAndWait();
-
-        //Resize the canvas
-        resizeResult.ifPresent(sizeValues -> {
-            double oldWidth = canvas.getWidth();
-            double oldHeight = canvas.getHeight();
-
-            canvas.setWidth(sizeValues.getKey());
-            canvas.setHeight(sizeValues.getValue());
-
-            if(oldHeight < sizeValues.getKey() || oldWidth < sizeValues.getValue()) {
-                //Copy and paste the canvas will get rid of transparency
-                //This will allow the new area of the canvas to be white rather than transparent so it can be seen
-                paintToolbox.getActiveTool().copyCanvas();
-                paintToolbox.getActiveTool().pasteCanvasCopy();
-            }
-        });
-
+        canvasTabManager.getActiveTab().resizeCanvas();
     }
 
-    //Method to change the active tool based on the toolChoice ChoiceBox
-    public void setTool(ActionEvent event) {
-        paintToolbox.setActiveTool(toolChoice.getValue(), colorPicker.getValue(), toolWidthSpinner.getValue(), dashingCheckBox.isSelected());
+    //Method to change the active shape tool based on the shapeToolChoice ChoiceBox
+    public void setShapeTool(ActionEvent event) {
+        paintToolbox.setActiveTool(shapeToolChoice.getValue(), canvasTabManager.getActiveTab().getGraphicsContext(),
+                colorPicker.getValue(), toolWidthSpinner.getValue(), dashingCheckBox.isSelected());
+
+        toolbarToggleGroup.selectToggle(null);
+    }
+
+    //Method for setting the active toolbar tool.
+    //It also deselects any tool that is currently selected within the shape tools
+    public void setToolbarTool() {
+        //First checking if the there is no toggle buttons selected, in this case the tool choice will default back to
+        //the selected shape
+        if (toolbarToggleGroup.getSelectedToggle() == null) {
+            paintToolbox.setActiveTool(shapeToolChoice.getValue(), canvasTabManager.getActiveTab().getGraphicsContext(),
+                    colorPicker.getValue(), toolWidthSpinner.getValue(), dashingCheckBox.isSelected());
+        } else {
+            //Passing the tool associated with the toggle button
+            //Casting the userDataObjet as a paint tool because each toggle button has a paint tool associated with it
+            try {
+                paintToolbox.setActiveTool((PaintTool)toolbarToggleGroup.getSelectedToggle().getUserData(),
+                        canvasTabManager.getActiveTab().getGraphicsContext(), colorPicker.getValue(),
+                        toolWidthSpinner.getValue(), dashingCheckBox.isSelected());
+            } catch(Exception e) {
+                System.out.println("Error: A type mismatch occurred when trying to set the active tool.");
+
+            }
+        }
+
     }
 
     //Setting up the spinner for tool width
@@ -354,22 +254,48 @@ public class SceneController {
     private void setupToolWidthSpinner() {
         //Ranges for the spinner are set to the constant variables for tool width limits
         SpinnerValueFactory<Integer> widthValueFactory =
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(minToolWidth, maxToolWidth);
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(MIN_TOOL_WIDTH, MAX_TOOL_WIDTH);
 
         //The Default width before user makes any changes
-        widthValueFactory.setValue(10);
+        widthValueFactory.setValue(DEFAULT_TOOL_WIDTH);
 
         //Linking the factory and spinner together
         toolWidthSpinner.setValueFactory(widthValueFactory);
 
         //Using a ChangeListener to track when the spinner is changed and update the tool width
-        toolWidthSpinner.valueProperty().addListener(new ChangeListener<>() {
-            @Override
-            public void changed(ObservableValue<? extends Integer> observableValue, Integer integer, Integer t1) {
-                paintToolbox.getActiveTool().setToolWidth(toolWidthSpinner.getValue());
+        toolWidthSpinner.valueProperty().addListener((_, _, _) ->
+                paintToolbox.getActiveTool().setToolWidth(toolWidthSpinner.getValue()));
+
+    }
+
+    //This method sets up the spinner found in the shape section of the menu bar.
+    //The spinner is for controlling the number of sides the polygon tool's polygon will have
+    public void setupPolygonSideSpinner() {
+        //Creating a spinner value factory with the minimum and maximum ranges available for polygon side #
+        SpinnerValueFactory<Integer> sideValueFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(MIN_POLYGON_SIDES, MAX_POLYGON_SIDES);
+
+        //Providing the default number of polygon sides
+        sideValueFactory.setValue(DEFAULT_POLYGON_SIDES);
+
+        polygonSideSpinner.setValueFactory(sideValueFactory);
+
+        //Adding a listener to the spinner to update the polygon tool's number of sides
+        polygonSideSpinner.valueProperty().addListener((_, _, _) -> {
+            //Finding the polygon tool and setting its value to the new side value
+            for(PaintTool paintTool : paintToolbox.getShapeTools()) {
+                if(paintTool instanceof PolygonTool) {
+                    ((PolygonTool) paintTool).setNumberOfSides(polygonSideSpinner.getValue());
+                }
             }
         });
 
+        //Making sure an initial size is set for the tool
+        for(PaintTool paintTool : paintToolbox.getShapeTools()) {
+            if(paintTool instanceof PolygonTool) {
+                ((PolygonTool) paintTool).setNumberOfSides(polygonSideSpinner.getValue());
+            }
+        }
     }
 
     //Method for updating the active tool's color when the colorPicker chooses a different color
@@ -382,24 +308,6 @@ public class SceneController {
         //Runs if the box is not checked
         paintToolbox.getActiveTool().setLineDashing(dashingCheckBox.isSelected());
 
-    }
-
-    // Mouse event handling methods
-    //Used for handling the start of a mouse drag
-    public void onCanvasMousePressed(MouseEvent e) {
-        paintToolbox.getActiveTool().onMousePressed(e);
-    }
-
-    //Handling the dragging action itself
-    public void onCanvasMouseDragged(MouseEvent e) {
-        paintToolbox.getActiveTool().onMouseDragged(e);
-        unsavedChanges = true;
-    }
-
-    //Used for handling the end of a mouse drag
-    public void onCanvasMouseReleased(MouseEvent e) {
-        paintToolbox.getActiveTool().onMouseReleased(e);
-        unsavedChanges = true;
     }
 
     public void easterEgg() {
@@ -436,50 +344,128 @@ public class SceneController {
     public void smartSaveSetup() {
         //Setting the stage's new close behavior for smart saving
         stage.setOnCloseRequest(event -> {
-            if (unsavedChanges) {
+            if (canvasTabManager.hasUnsavedChanges()) {
                 event.consume();  // Stop the default close behavior
 
-                //Constructing a confirmation alert
+                //If the tab pane has only two tabs (one open tab and the new tab button (which is technically a tab)
+                //Then we will ask the user if they want to save the file
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Save Changes?");
-                alert.setHeaderText("You have attempted to exit Pain(t) without saving.");
-                alert.setContentText("Would you like to save before closing?");
+                if(tabPane.getTabs().size() <= 2) {
+                    //Constructing a confirmation alert
+                    alert.setTitle("Save Changes?");
+                    alert.setHeaderText("You have attempted to exit Pain(t) without saving.");
+                    alert.setContentText("Would you like to save the tab before closing?");
 
 
-                alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+                    alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
 
-                Optional<ButtonType> result = alert.showAndWait();
+                    Optional<ButtonType> result = alert.showAndWait();
 
-                //result should always be present
-                //If not, something is very wrong
-                if (result.isPresent()) {
+                    //result should always be present
+                    //If not, something is very wrong
+                    if (result.isPresent()) {
 
-                    //Dialog Box Outcomes
-                    if (result.get() == ButtonType.YES) {
-                        //user chooses OK
-                        saveCanvas();
-                        stage.close();
-                        Platform.exit();
-                        System.exit(0);
+                        //Dialog Box Outcomes
+                        if (result.get() == ButtonType.YES) {
+                            //user chooses yes
+                            fileManager.saveCanvas();
+                            stage.close();
+                            Platform.exit();
+                            System.exit(0);
 
-                    } else if (result.get() == ButtonType.NO) {
-                        // ... user chose CANCEL or closed the dialog
-                        //Stay in the application
-                        stage.close();
-                        Platform.exit();
-                        System.exit(0);
+                        } else if (result.get() == ButtonType.NO) {
+                            // ... user chose CANCEL or closed the dialog
+                            //Stay in the application
+                            stage.close();
+                            Platform.exit();
+                            System.exit(0);
 
-                    } else {
-                        event.consume();
+                        } else {
+                            event.consume();
+                        }
+                    }
+                } else {
+                    //In this case the user has multiple tabs open and we are just going to ask them if they are sure
+                    //they want to exit instead.
+                    //Constructing a confirmation alert
+                    alert.setTitle("Unsaved Changes");
+                    alert.setHeaderText("You have attempted to exit Pain(t) with multiple unsaved tabs.");
+                    alert.setContentText("Are you sure you would like to exit?");
+
+                    alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+
+                    Optional<ButtonType> result = alert.showAndWait();
+
+                    //result should always be present
+                    //If not, something is very wrong
+                    if (result.isPresent()) {
+
+                        //Dialog Box Outcomes
+                        if (result.get() == ButtonType.YES) {
+                            //user chooses yes
+                            //Close Pain(t)
+                            stage.close();
+                            Platform.exit();
+                            System.exit(0);
+
+                        } else {
+                            //If they said no we just consume the event and Pain(t) keeps running
+                            event.consume();
+                        }
                     }
                 }
-
             } else {
-                //What we do if the user has saved. (close Pain(t)
+                //What we do if the user has saved everything. (close Pain(t))
                 stage.close();
             }
+
         });
+
     }
+
+    //This method is called when the user closes a tab from the file menu
+    public void closeTab() {
+        if (canvasTabManager.getActiveTab().hasUnsavedChanges()) {
+            //Constructing a confirmation alert
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Save Changes?");
+            alert.setHeaderText("You have attempted to close a tab without saving its changes.");
+            alert.setContentText("Would you like to save the selected tab before closing it?");
+
+
+            alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+
+            Optional<ButtonType> result = alert.showAndWait();
+
+            //result should always be present
+            //If not, something is very wrong
+            if (result.isPresent()) {
+
+                //Dialog Box Outcomes
+                if (result.get() == ButtonType.YES) {
+                    //user chooses Yes
+                    fileManager.saveCanvas();
+                    canvasTabManager.closeSelectedTab();
+
+                } else if (result.get() == ButtonType.NO) {
+                    //User chooses no
+                    //Just close the tab
+                    canvasTabManager.closeSelectedTab();
+
+                }
+                //When the user chooses cancel, nothing happens
+            }
+
+        } else {
+            //What we do if the user has saved. (close the tab only)
+            canvasTabManager.closeSelectedTab();
+        }
+    }
+
+    public void clearCanvas() {
+        canvasTabManager.getActiveTab().clearCanvas();
+    }
+
 
     public void quitPaint() {
         //Simulating the closing of the window by firing an event

@@ -1,16 +1,10 @@
-package cs250.paint;
+package cs250.paint.PaintTools;
 
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 
 //This class is extremely similar to the RectangleTool class but forces a 1:1 aspect ratio on the rectangle
-public class SquareTool extends PaintTool{
+public class SquareTool extends PaintTool {
     private double startX, startY, endX, endY;
-
-    SquareTool(GraphicsContext graphicsContext, Color toolColor, int toolWidth) {
-        super(graphicsContext, toolColor, toolWidth);
-    }
 
     //SquareTool Events
     public void onMousePressed(MouseEvent mouseEvent) {
