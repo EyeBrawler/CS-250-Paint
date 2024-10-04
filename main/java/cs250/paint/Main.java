@@ -30,7 +30,7 @@ public class Main extends Application {
 
         //Setting window title and populating program icon from resources folder
         stage.setTitle("Pain(t)");
-        Image icon = new Image(String.valueOf(Main.class.getResource("paintIcon.png")));
+        Image icon = new Image(String.valueOf(Main.class.getResource("icons/PaintIcon.png")));
         stage.getIcons().add(icon);
 
         //Adding the scene to the stage (window)

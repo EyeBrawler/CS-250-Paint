@@ -31,6 +31,7 @@ public class PaintToolbox {
         shapePaintTools.add(new RightTriangleTool());
         shapePaintTools.add(new StarTool());
         shapePaintTools.add(new PolygonTool());
+        shapePaintTools.add(new StarPolygonTool());
 
     }
 

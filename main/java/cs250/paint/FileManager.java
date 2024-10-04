@@ -1,5 +1,6 @@
 package cs250.paint;
 
+import cs250.paint.PaintLogger.PaintLogger;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
@@ -106,6 +107,9 @@ public class FileManager {
 
             //Updating the buffered image associated with the tab. Allows the web server to get the image on opening.
             updateBufferedImage(tabToOpenImage);
+
+            //Logging the operation
+            PaintLogger.logOperation(tabToOpenImage.getText(), "File Opened");
         }
     }
 
@@ -164,7 +168,7 @@ public class FileManager {
     /**
      * Saves the canvas to a currently loaded file. If there is no loaded file this method will call saveAsDialog()
      * @param activeTab
-     * The tab that will have it's canvas saved to file.
+     * The tab that will have its canvas saved to file.
      */
     public void saveCanvas(CanvasTab activeTab) {
         //Forcing Save As Dialog when there is no openFile to write over
@@ -185,6 +189,11 @@ public class FileManager {
                 try {
                     // Write the image to the file using the appropriate format
                     ImageIO.write(activeTab.getBufferedImage(), activeTab.getFileType(), activeTab.getOpenFile());
+                    activeTab.setUnsavedChanges(false);
+
+                    //Log the operation
+                    PaintLogger.logOperation(activeTab.getText(), "File Saved");
+
                 } catch (IOException e) {
                     //Displaying Error Message when writing fails
                     Alert alert = new Alert(Alert.AlertType.ERROR);

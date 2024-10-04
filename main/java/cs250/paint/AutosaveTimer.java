@@ -7,6 +7,7 @@ import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.util.Duration;
+import org.controlsfx.control.Notifications;
 
 /**
  * The AutosaveTimer class controls the file autosave timer for pain(t).
@@ -17,7 +18,6 @@ import javafx.util.Duration;
 public class AutosaveTimer {
     //These time values are in seconds
     private static final int INITIAL_TIME = 300;
-    //private static final int INITIAL_TIME = 300;
     private int timeRemaining;
 
     //Each AutosaveTimer has a label
@@ -31,6 +31,8 @@ public class AutosaveTimer {
 
     //The canvas tab manager is used by the web server check box
     private final CanvasTabManager canvasTabManager;
+
+    private boolean notificationsRequested;
 
 
     /**
@@ -46,6 +48,8 @@ public class AutosaveTimer {
         this.timerLabel = timerLabel;
         this.webServerCheckBox = webServerCheckBox;
         this.canvasTabManager = canvasTabManager;
+
+        notificationsRequested = false;
 
         timeRemaining = INITIAL_TIME;
 
@@ -70,6 +74,19 @@ public class AutosaveTimer {
                        if(tab instanceof CanvasTab && ((CanvasTab) tab).hasUnsavedChanges() &&
                                !((CanvasTab) tab).hasNewCanvas()) {
                            fileManager.saveCanvas((CanvasTab) tab);
+
+                           System.out.println(((CanvasTab) tab).hasUnsavedChanges());
+
+                           //Display a popup notification for each tab that is being autosaved
+                           if(notificationsRequested) {
+                               // Create an informational notification
+                               Notifications.create()
+                                       .title("Autosave Complete")
+                                       .text("The tab containing " + ((CanvasTab) tab).getOpenFile().getName()
+                                               + " has been autosaved.")
+                                       .showInformation();
+                           }
+
                        }
                    }
                 });
@@ -77,6 +94,15 @@ public class AutosaveTimer {
         }));
         //Have  the timeline run forever until it is manually stopped
         timeline.setCycleCount(Timeline.INDEFINITE);
+    }
+
+    /**
+     * Changes whether notifications for autosaving will be sent.
+     * @param notificationsRequested
+     * The boolean representing true for sending autosave notifications and false otherwise.
+     */
+    public void setNotificationsRequest(boolean notificationsRequested) {
+        this.notificationsRequested = notificationsRequested;
     }
 
     /**

@@ -1,14 +1,13 @@
 package cs250.paint;
 
+import cs250.paint.PaintLogger.PaintLogger;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.util.Pair;
@@ -31,8 +30,10 @@ public class CanvasTab extends Tab{
 
     private boolean unsavedChanges = false; // Unsaved changes flag
 
-    private static final double DEFAULT_CANVAS_WIDTH = 800;
-    private static final double DEFAULT_CANVAS_HEIGHT = 600;
+    private static final double DEFAULT_CANVAS_WIDTH = 1088;
+    private static final double DEFAULT_CANVAS_HEIGHT = 680;
+
+    private static final double ROTATION_DEGREES = 90;
 
     private final PaintToolbox paintToolbox;
     private File openFile;
@@ -67,15 +68,16 @@ public class CanvasTab extends Tab{
         //Canvas Size (We are assuming the canvas will initially be blank
         canvas = new Canvas(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
 
-        //StackPane is used to keep the canvas centered when it is smaller than the window
-        //The canvas will be added to the stack pane
-        StackPane stackPane = new StackPane(canvas);
-        stackPane.setPrefHeight(0);
-        stackPane.setPrefWidth(0);
-        stackPane.setBackground(Background.fill(Color.LIGHTGRAY));
+        //StackPane was used to keep the canvas centered when it is smaller than the window
+        //The canvas was added to the stack pane
+        //To avoid the select tool misalignment bug, the stack pane has been swapped for an anchor pane.
+        AnchorPane anchorPane = new AnchorPane(canvas);
+        anchorPane.setPrefHeight(0);
+        anchorPane.setPrefWidth(0);
+        anchorPane.setBackground(Background.fill(Color.LIGHTGRAY));
 
         //The scroll pane holds the stack pane in the case that the stack pane is larger than the window
-        ScrollPane scrollPane = new ScrollPane(stackPane);
+        ScrollPane scrollPane = new ScrollPane(anchorPane);
 
         //Configuring the scroll pane
         //These options follow the FXML file from previous version where the canvas was in the FXML
@@ -269,6 +271,9 @@ public class CanvasTab extends Tab{
 
         //Add snapshot to undo stack
         undoStack.push(canvas.snapshot(undoRedoParams, null));
+
+        //Logging Operation
+        PaintLogger.logOperation(this.getText(), paintToolbox.getActiveTool() + " Tool Used");
     }
 
     /**
@@ -345,7 +350,11 @@ public class CanvasTab extends Tab{
                 graphicsContext.setFill(WHITE);
                 graphicsContext.fillRect(0,0,canvas.getWidth(), canvas.getHeight());
 
-                unsavedChanges = false;
+                unsavedChanges = !hasNewCanvas();
+
+                //Add snapshot to undo stack
+                undoStack.push(canvas.snapshot(undoRedoParams, null));
+
             }
             //If they say no we do nothing
         }
@@ -424,6 +433,11 @@ public class CanvasTab extends Tab{
             canvas.setWidth(sizeValues.getKey());
             canvas.setHeight(sizeValues.getValue());
 
+            //Add snapshot to undo stack
+            undoStack.push(canvas.snapshot(undoRedoParams, null));
+
+            unsavedChanges = true;
+
             if(oldHeight < sizeValues.getKey() || oldWidth < sizeValues.getValue()) {
                 //Copy and paste the canvas will get rid of transparency
                 //This will allow the new area of the canvas to be white rather than transparent so it can be seen
@@ -432,6 +446,95 @@ public class CanvasTab extends Tab{
             }
         });
 
+    }
+
+    /**
+     * Rotates the canvas by a passed in value
+     */
+    public void rotateCanvas() {
+        // Capture the current width and height of the canvas
+        double oldWidth = canvas.getWidth();
+        double oldHeight = canvas.getHeight();
+
+        //Copy the contents of the canvas
+        paintToolbox.getActiveTool().copyCanvas();
+
+        // Resize the canvas by swapping width and height
+        canvas.setWidth(oldHeight);
+        canvas.setHeight(oldWidth);
+
+
+        graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
+        // Rotate the GraphicsContext by 90 degrees
+        graphicsContext.save(); // Save the current state of the GraphicsContext
+        graphicsContext.translate(canvas.getWidth(), 0); // Move the origin to the right side of the canvas
+        graphicsContext.rotate(ROTATION_DEGREES); // Rotate 90 degrees clockwise
+
+        //Paste canvas contents back
+        paintToolbox.getActiveTool().pasteCanvasCopy();
+
+        // Restore the original state of the GraphicsContext
+        graphicsContext.restore();
+
+        unsavedChanges = true;
+
+        //Add snapshot to undo stack
+        undoStack.push(canvas.snapshot(undoRedoParams, null));
+    }
+
+    public void mirrorCanvasHorizontally() {
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+
+        //Copy the contents of the canvas
+        paintToolbox.getActiveTool().copyCanvas();
+
+        //Clear the canvas to prevent artifacts
+        graphicsContext.clearRect(0, 0, width, height);
+
+        // Apply horizontal mirroring (scale by -1 on the x-axis)
+        graphicsContext.save(); // Save the current state
+        graphicsContext.translate(width, 0); // Move the origin to the right edge
+        graphicsContext.scale(-1, 1); // Flip horizontally
+
+        // Draw the mirrored image on the canvas
+        paintToolbox.getActiveTool().pasteCanvasCopy();
+
+        // Restore the original state of the graphics context
+        graphicsContext.restore();
+
+        unsavedChanges = true;
+
+        //Add snapshot to undo stack
+        undoStack.push(canvas.snapshot(undoRedoParams, null));
+    }
+
+    public void mirrorCanvasVertically() {
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+
+        //Copy the contents of the canvas
+        paintToolbox.getActiveTool().copyCanvas();
+
+        //Clear the canvas to prevent artifacts
+        graphicsContext.clearRect(0, 0, width, height);
+
+        // Apply vertical mirroring (scale by -1 on the y-axis)
+        graphicsContext.save(); // Save the current state
+        graphicsContext.translate(0, height); // Move the origin to the bottom edge
+        graphicsContext.scale(1, -1); // Flip vertically
+
+        // Draw the mirrored image on the canvas
+        paintToolbox.getActiveTool().pasteCanvasCopy();
+
+        // Restore the original state of the graphics context
+        graphicsContext.restore();
+
+        unsavedChanges = true;
+
+        //Add snapshot to undo stack
+        undoStack.push(canvas.snapshot(undoRedoParams, null));
     }
 
     private void setupTabSmartSaving () {
@@ -456,6 +559,9 @@ public class CanvasTab extends Tab{
 
                     //Dialog Box Outcomes
                     if (result.get() == ButtonType.YES) {
+                        //Logging Operation
+                        PaintLogger.logOperation(this.getText(), "Tab Closed");
+
                         //user chooses OK
                         Tab tab = (Tab) event.getSource(); // Get the tab from the event's source
                         getTabPane().getTabs().remove(tab);
@@ -470,13 +576,15 @@ public class CanvasTab extends Tab{
                 }
 
             } else {
+                //Logging Operation
+                PaintLogger.logOperation(this.getText(), "Tab Closed");
+
                 //What we do if the user has saved. (close the tab)
                 Tab tab = (Tab) event.getSource(); // Get the tab from the event's source
                 getTabPane().getTabs().remove(tab);
 
                 //Make sure the web server cannot display the image anymore even if the context exists
                 isRequestedForServer = false;
-
             }
         });
     }

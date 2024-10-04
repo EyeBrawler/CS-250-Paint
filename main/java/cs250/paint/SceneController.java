@@ -1,5 +1,6 @@
 package cs250.paint;
 
+import cs250.paint.PaintLogger.PaintLogger;
 import cs250.paint.PaintTools.*;
 import cs250.paint.WebServer.PaintWebServer;
 import javafx.application.Platform;
@@ -8,9 +9,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.util.Callback;
 
 import java.io.*;
 import java.util.Optional;
@@ -45,10 +48,16 @@ public class SceneController {
     private static final int MIN_POLYGON_SIDES = 3;
     private static final int DEFAULT_POLYGON_SIDES = 3;
 
+    @FXML
+    private Spinner<Integer> starPolygonPointSpinner;
+    private static final int MAX_STAR_POLYGON_POINTS = 9999;
+    private static final int MIN_STAR_POLYGON_POINTS = 4;
+    private static final int DEFAULT_STAR_POLYGON_POINTS = 4;
+
     //Toolbar Items
     //These objects control many of the paint tool attributes
     @FXML
-    private ChoiceBox<PaintTool> shapeToolChoice;
+    private ComboBox<PaintTool> shapeToolChoice;
     @FXML
     private Spinner<Integer> toolWidthSpinner;
     @FXML
@@ -81,6 +90,8 @@ public class SceneController {
     //Check box for uploading to the web server
     @FXML
     private CheckMenuItem webServerCheckBox;
+    @FXML
+    private CheckMenuItem autosaveNotificationCheckBox;
 
     //A variable for storing an instance of PaintWebServer itself
     private PaintWebServer webServer;
@@ -99,7 +110,6 @@ public class SceneController {
     //The paintToolbox to manage paint tools
     PaintToolbox paintToolbox;
 
-
     //Function ran by JavaFX after the scene is loaded
     //This contains a significant amount of miscellaneous setup code.
     @FXML
@@ -117,14 +127,17 @@ public class SceneController {
         //Method for doing the same to the spinner in the shape category of the menu bar
         setupPolygonSideSpinner();
 
-        //Setting up the shape Tool Choice ChoiceBox for tool selection
+        setupStarPolygonPointSpinner();
+
+        //Setting up the shape Tool Choice ComboBox for tool selection
         shapeToolChoice.getItems().addAll(paintToolbox.getShapeTools());
 
         //To have an item selected by default for the shape tools, the first item in tool list is selected
         //with the setValue method
         shapeToolChoice.setValue(paintToolbox.getShapeTools().getFirst());
-        //Using the :: method reference operator to link method to ChoiceBox
+        //Using the :: method reference operator to link method to ComboBox
         shapeToolChoice.setOnAction(this::setShapeTool);
+        addShapeToolChoiceIcons();
 
 
         //Adding user data to the toggle buttons in the toolbar
@@ -176,8 +189,7 @@ public class SceneController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("About");
         alert.setHeaderText("Pain(t)");
-        alert.setContentText("Version 0.5\nPain(t) is a less professional recreation of MS Paint" +
-                "\nCreated By Sam Thyen");
+        alert.setContentText("Version 0.6\nPain(t) is a less professional recreation of MS Paint\nCreated By Sam Thyen");
 
         alert.showAndWait();
     }
@@ -253,15 +265,18 @@ public class SceneController {
 
     public void undo() {
         canvasTabManager.getActiveTab().undo();
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(), "Undo Attempted");
     }
 
     public void redo() {
         canvasTabManager.getActiveTab().redo();
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Redo Attempted");
     }
 
     public void cutSelectionToggle() {
         if (paintToolbox.getActiveTool() instanceof SelectTool) {
             ((SelectTool) paintToolbox.getActiveTool()).setCutMode(cutModeCheckBox.isSelected());
+            PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Cut Mode Toggled");
         }
     }
 
@@ -269,6 +284,31 @@ public class SceneController {
     //See canvas tab manager for more details
     public void resizeCanvas() {
         canvasTabManager.getActiveTab().resizeCanvas();
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Canvas Resize Attempted");
+    }
+
+    /**
+     * Rotates the active canvas 90 degrees.
+     */
+    public void rotateCanvas() {
+        canvasTabManager.getActiveTab().rotateCanvas();
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Canvas Rotated by 90 Degrees");
+    }
+
+    /**
+     * Mirrors the active canvas horizontally.
+     */
+    public void mirrorCanvasHorizontally() {
+        canvasTabManager.getActiveTab().mirrorCanvasHorizontally();
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Canvas Mirrored Horizontally");
+    }
+
+    /**
+     * Mirrors the active canvas vertically.
+     */
+    public void mirrorCanvasVertically() {
+        canvasTabManager.getActiveTab().mirrorCanvasVertically();
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Canvas Mirrored Vertically");
     }
 
     /**
@@ -283,18 +323,62 @@ public class SceneController {
         if(webServerCheckBox.isSelected()) {
             webServer.addImagePage(canvasTabManager.getActiveTab().getOpenFile().getName(),
                     canvasTabManager.getActiveTab());
+
+            PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),
+                    "Sending to Web Server Enabled");
         } else {
             //If we are deselecting the checkbox, remove the tab with that name
             webServer.removeImagePage(canvasTabManager.getActiveTab().getOpenFile().getName());
+
+            PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),
+                    "Sending to Web Server Disabled");
         }
     }
 
-    //Method to change the active shape tool based on the shapeToolChoice ChoiceBox
+    /**
+     * This method configures the ShapeToolChoice ComboBox so that it can display icons for each tool.
+     */
+    public void addShapeToolChoiceIcons() {
+        // Set a custom cell factory to display both text and image
+        shapeToolChoice.setCellFactory(new Callback<>() {
+            public ListCell<PaintTool> call(javafx.scene.control.ListView<PaintTool> param) {
+                return new ListCell<>() {
+                    private final ImageView imageView = new ImageView();
+
+                    protected void updateItem(PaintTool item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (empty || item == null) {
+                            setGraphic(null);
+                            setText(null);
+                        } else {
+                            // Set the icon and the text (tool name)
+                            imageView.setImage(item.getShapeIcon());
+                            imageView.setFitHeight(16);  // Resize the icon if necessary
+                            imageView.setFitWidth(16);
+                            setText(item.toString());
+                            setGraphic(imageView);
+                        }
+                    }
+                };
+
+
+            }
+        });
+
+        // Ensure the selected item shows the image and text
+        shapeToolChoice.setButtonCell(shapeToolChoice.getCellFactory().call(null));
+    }
+
+    //Method to change the active shape tool based on the shapeToolChoice ComboBox
     public void setShapeTool(ActionEvent event) {
         paintToolbox.setActiveTool(shapeToolChoice.getValue(), canvasTabManager.getActiveTab().getGraphicsContext(),
                 colorPicker.getValue(), toolWidthSpinner.getValue(), dashingCheckBox.isSelected());
 
         toolbarToggleGroup.selectToggle(null);
+
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),
+                paintToolbox.getActiveTool().toString() + " Tool Selected");
     }
 
     //Method for setting the active toolbar tool.
@@ -305,6 +389,10 @@ public class SceneController {
         if (toolbarToggleGroup.getSelectedToggle() == null) {
             paintToolbox.setActiveTool(shapeToolChoice.getValue(), canvasTabManager.getActiveTab().getGraphicsContext(),
                     colorPicker.getValue(), toolWidthSpinner.getValue(), dashingCheckBox.isSelected());
+
+            PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),
+                    paintToolbox.getActiveTool().toString() + " Tool Selected");
+
         } else {
             //Passing the tool associated with the toggle button
             //Casting the userDataObjet as a paint tool because each toggle button has a paint tool associated with it
@@ -312,6 +400,9 @@ public class SceneController {
                 paintToolbox.setActiveTool((PaintTool)toolbarToggleGroup.getSelectedToggle().getUserData(),
                         canvasTabManager.getActiveTab().getGraphicsContext(), colorPicker.getValue(),
                         toolWidthSpinner.getValue(), dashingCheckBox.isSelected());
+
+                PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),
+                        paintToolbox.getActiveTool().toString() + " Tool Selected");
             } catch(Exception e) {
                 System.out.println("Error: A type mismatch occurred when trying to set the active tool.");
 
@@ -369,15 +460,50 @@ public class SceneController {
         }
     }
 
+    //This method sets up the star polygon spinner found in the shape section of the menu bar.
+    //The spinner is for controlling the number of sides the star polygon tool's polygon will have
+    public void setupStarPolygonPointSpinner() {
+        //Creating a spinner value factory with the minimum and maximum ranges available for star polygon point #
+        SpinnerValueFactory<Integer> pointValueFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(MIN_STAR_POLYGON_POINTS, MAX_STAR_POLYGON_POINTS);
+
+        //Providing the default number of star polygon points
+        pointValueFactory.setValue(DEFAULT_STAR_POLYGON_POINTS);
+
+        starPolygonPointSpinner.setValueFactory(pointValueFactory);
+
+        //Adding a listener to the spinner to update the star polygon tool's number of points
+        starPolygonPointSpinner.valueProperty().addListener((_, _, _) -> {
+            //Finding the starr polygon tool and setting its value to the new point value
+            for(PaintTool paintTool : paintToolbox.getShapeTools()) {
+                if(paintTool instanceof StarPolygonTool) {
+                    ((StarPolygonTool) paintTool).setNumberOfPoints(starPolygonPointSpinner.getValue());
+                }
+            }
+        });
+
+        //Making sure an initial size is set for the tool
+        for(PaintTool paintTool : paintToolbox.getShapeTools()) {
+            if(paintTool instanceof StarPolygonTool) {
+                ((StarPolygonTool) paintTool).setNumberOfPoints(starPolygonPointSpinner.getValue());
+            }
+        }
+    }
+
     //Method for updating the active tool's color when the colorPicker chooses a different color
     public void setColor() {
         paintToolbox.getActiveTool().setToolColor(colorPicker.getValue());
+
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),
+                "Tool Color Changed to " + colorPicker.getValue());
     }
 
     public void dashingCheckToggled() {
         //If the box is checked
         //Runs if the box is not checked
         paintToolbox.getActiveTool().setLineDashing(dashingCheckBox.isSelected());
+
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Line Dashing CheckBox Toggled");
 
     }
 
@@ -399,6 +525,9 @@ public class SceneController {
             specialController.setStage(stage);
 
             stage.show();
+
+            PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),
+                    "Someone wanted to learn about Java");
 
         }
         catch (IOException e) {
@@ -473,6 +602,10 @@ public class SceneController {
 
                         //Dialog Box Outcomes
                         if (result.get() == ButtonType.YES) {
+                            //Logging Operation and Shutting Down the logger
+                            PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Paint Exited");
+                            PaintLogger.shutdownLogger();
+
                             //user chooses yes, save all tabs
                             //then Close Pain(t)
                             saveAllTabs();
@@ -481,6 +614,10 @@ public class SceneController {
                             System.exit(0);
 
                         } else if(result.get() == ButtonType.NO) {
+                            //Logging Operation and Shutting Down the logger
+                            PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Paint Exited");
+                            PaintLogger.shutdownLogger();
+
                             //User chooses no
                             //Just Close Pain(t)
                             stage.close();
@@ -493,6 +630,10 @@ public class SceneController {
                     }
                 }
             } else {
+                //Logging Operation and Shutting Down the logger
+                PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Paint Exited");
+                PaintLogger.shutdownLogger();
+
                 //What we do if the user has saved everything. (close Pain(t))
                 stage.close();
                 Platform.exit();
@@ -520,8 +661,20 @@ public class SceneController {
         });
     }
 
+    /**
+     * This method runs whenever the user selects the "Autosave Notifications" Check Box in the menu bar. It updates
+     * the status of the autosave timers flag for autosave notifications.
+     */
+    public void autosaveNotificationToggle() {
+        autosaveTimer.setNotificationsRequest(autosaveNotificationCheckBox.isSelected());
+
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Autosave Notifications Toggled");
+    }
+
     //This method is called when the user closes a tab from the file menu
     public void closeTab() {
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Tab Closed");
+
         if (canvasTabManager.getActiveTab().hasUnsavedChanges()) {
             //Constructing a confirmation alert
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -565,6 +718,8 @@ public class SceneController {
 
     public void clearCanvas() {
         canvasTabManager.getActiveTab().clearCanvas();
+
+        PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Canvas Clearing Attempted");
     }
 
 
