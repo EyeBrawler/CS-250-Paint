@@ -3,8 +3,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.CheckMenuItem?>
-<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.CustomMenuItem?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
@@ -17,12 +17,15 @@
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.paint.Color?>
 
-<AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cs250.paint.SceneController">
+<AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cs250.paint.SceneController">
    <children>
       <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
@@ -94,8 +97,14 @@
                         </HBox>
                      </content>
                   </CustomMenuItem>
+                  <CheckMenuItem fx:id="autosaveNotificationCheckBox" mnemonicParsing="false" onAction="#autosaveNotificationToggle" text="Autosave Notifications" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" onAction="#clearCanvas" text="Clear Canvas" />
                 <MenuItem mnemonicParsing="false" onAction="#resizeCanvas" text="Resize Canvas" />
+                  <MenuItem mnemonicParsing="false" onAction="#rotateCanvas" text="Rotate Canvas 90°" />
+                  <MenuItem mnemonicParsing="false" onAction="#mirrorCanvasHorizontally" text="Mirror Canvas Horizontally" />
+                  <MenuItem mnemonicParsing="false" onAction="#mirrorCanvasVertically" text="Mirror Canvas Vertically" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
                   <CheckMenuItem fx:id="webServerCheckBox" disable="true" mnemonicParsing="false" onAction="#webServerToggle" text="Send to Web Server" />
               </items>
             </Menu>
@@ -115,6 +124,20 @@
                         </HBox>
                      </content>
                   </CustomMenuItem>
+                  <CustomMenuItem mnemonicParsing="false" text="Star Polygon Sides">
+                     <content>
+                        <HBox spacing="5.0">
+                           <children>
+                              <Label text="Star Polygon Points:" textFill="#010101">
+                                 <HBox.margin>
+                                    <Insets top="3.0" />
+                                 </HBox.margin>
+                              </Label>
+                              <Spinner fx:id="starPolygonPointSpinner" />
+                           </children>
+                        </HBox>
+                     </content>
+                  </CustomMenuItem>
                </items>
             </Menu>
           <Menu mnemonicParsing="false" text="Help">
@@ -128,33 +151,95 @@
       <ToolBar layoutY="28.0" prefHeight="35.0" prefWidth="200.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="28.0">
          <items>
             <Label text="Image Tools:" />
-            <ToggleButton fx:id="selectAreaButton" mnemonicParsing="false" onAction="#setToolbarTool" selected="true" text="Select Area">
+            <ToggleButton fx:id="selectAreaButton" mnemonicParsing="false" onAction="#setToolbarTool" selected="true">
                <toggleGroup>
                   <ToggleGroup fx:id="toolbarToggleGroup" />
                </toggleGroup>
+               <graphic>
+                  <ImageView fitHeight="32.0" fitWidth="32.0">
+                     <image>
+                        <Image url="@icons/SelectTool.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Select Tool: Allows the selection of a rectangular region that can be copied or cut. " />
+               </tooltip>
             </ToggleButton>
-            <ToggleButton fx:id="textInsertButton" mnemonicParsing="false" onAction="#setToolbarTool" text="Text" toggleGroup="$toolbarToggleGroup" />
+            <ToggleButton fx:id="textInsertButton" mnemonicParsing="false" onAction="#setToolbarTool" toggleGroup="$toolbarToggleGroup">
+               <graphic>
+                  <ImageView fitHeight="32.0" fitWidth="32.0">
+                     <image>
+                        <Image url="@icons/TextTool.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Text Tool: Allows the insertion of text." />
+               </tooltip></ToggleButton>
             <Separator orientation="VERTICAL" />
             <Label text="Drawing Tools:" />
-            <ToggleButton fx:id="lineButton" mnemonicParsing="false" onAction="#setToolbarTool" text="Line" toggleGroup="$toolbarToggleGroup" />
-            <ToggleButton fx:id="pencilButton" mnemonicParsing="false" onAction="#setToolbarTool" text="Pencil" toggleGroup="$toolbarToggleGroup" />
-            <ToggleButton fx:id="eraserButton" mnemonicParsing="false" onAction="#setToolbarTool" text="Eraser" toggleGroup="$toolbarToggleGroup" />
+            <ToggleButton fx:id="lineButton" mnemonicParsing="false" onAction="#setToolbarTool" toggleGroup="$toolbarToggleGroup">
+               <graphic>
+                  <ImageView fitHeight="32.0" fitWidth="32.0">
+                     <image>
+                        <Image url="@icons/Line.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Line Tool: Draws a straight line." />
+               </tooltip></ToggleButton>
+            <ToggleButton fx:id="pencilButton" mnemonicParsing="false" onAction="#setToolbarTool" toggleGroup="$toolbarToggleGroup">
+               <graphic>
+                  <ImageView fitHeight="32.0" fitWidth="32.0">
+                     <image>
+                        <Image url="@icons/Pencil.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Pencil Tool: Allows freehand drawing." />
+               </tooltip></ToggleButton>
+            <ToggleButton fx:id="eraserButton" mnemonicParsing="false" onAction="#setToolbarTool" toggleGroup="$toolbarToggleGroup">
+               <graphic>
+                  <ImageView fitHeight="32.0" fitWidth="32.0">
+                     <image>
+                        <Image url="@icons/Eraser.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Eraser Tool: Allows for freehand erasing." />
+               </tooltip></ToggleButton>
             <Separator orientation="VERTICAL" />
             <Label text="Shape Tools:" />
-            <ChoiceBox fx:id="shapeToolChoice" />
+            <ComboBox fx:id="shapeToolChoice">
+               <tooltip>
+                  <Tooltip text="Shape Tool Combo Box: Allows the selection of a shape tool." />
+               </tooltip></ComboBox>
             <Separator orientation="VERTICAL" />
             <Label text="Width:" />
-            <Spinner fx:id="toolWidthSpinner" prefWidth="70.0" />
+            <Spinner fx:id="toolWidthSpinner" prefWidth="70.0">
+               <tooltip>
+                  <Tooltip text="Tool Width Spinner: Allows the choice of tool width in pixels or if using the font tool, font size." />
+               </tooltip></Spinner>
             <Separator orientation="VERTICAL" />
             <Label text="Color:" />
             <ColorPicker fx:id="colorPicker" onAction="#setColor">
                <value>
                   <Color />
-               </value></ColorPicker>
+               </value>
+               <tooltip>
+                  <Tooltip text="Color Picker: Changes the color of the selected tool." />
+               </tooltip></ColorPicker>
             <Separator orientation="VERTICAL" />
-            <CheckBox fx:id="dashingCheckBox" mnemonicParsing="false" onAction="#dashingCheckToggled" text="Dashed Lines" />
+            <CheckBox fx:id="dashingCheckBox" mnemonicParsing="false" onAction="#dashingCheckToggled" text="Dashed Lines">
+               <tooltip>
+                  <Tooltip text="Dashed Lines Check Box:  Toggles whether shapes/lines will be dashed." />
+               </tooltip></CheckBox>
          </items>
       </ToolBar>
-      <TabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="63.0" />
+      <TabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="80.0" />
    </children>
 </AnchorPane>
