@@ -1,6 +1,9 @@
 package cs250.paint.PaintTools;
 
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+
+import java.io.InputStream;
 
 public class CircleTool extends PaintTool {
     //upperLeftX is the upper left of the ellipse and where the user starts dragging
@@ -39,6 +42,18 @@ public class CircleTool extends PaintTool {
         graphicsContext.strokeOval(upperLeftX, upperLeftY, endX - upperLeftX, endX - upperLeftX);
 
     }
+
+    public Image getShapeIcon() {
+        InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Circle.png");
+
+        if (resourceStream == null) {
+            System.out.println("Resource not found: /cs250/paint/icons/Circle.png");
+            return null;
+        }
+
+        return new Image(resourceStream);
+    }
+
 
     public String toString() {
         return "Circle";

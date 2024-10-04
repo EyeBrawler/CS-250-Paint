@@ -1,5 +1,6 @@
 package cs250.paint.PaintTools;
 
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 
 import static javafx.scene.paint.Color.WHITE;
@@ -37,6 +38,10 @@ public class EraserTool extends PaintTool {
 
         //Closing the path so that there are no issues when switching to another tool
         graphicsContext.closePath();
+    }
+
+    public Image getShapeIcon() {
+        return null;
     }
 
     public String toString() {

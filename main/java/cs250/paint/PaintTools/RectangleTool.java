@@ -1,6 +1,9 @@
 package cs250.paint.PaintTools;
 
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+
+import java.io.InputStream;
 
 public class RectangleTool extends PaintTool {
     private double startX, startY, endX, endY;
@@ -57,6 +60,17 @@ public class RectangleTool extends PaintTool {
         //Actually draw the rectangle
         graphicsContext.strokeRect(startX, startY, endX - startX, endY - startY);
 
+    }
+
+    public Image getShapeIcon() {
+        InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Rectangle.png");
+
+        if (resourceStream == null) {
+            System.out.println("Resource not found: /cs250/paint/icons/Rectangle.png");
+            return null;
+        }
+
+        return new Image(resourceStream);
     }
 
     public String toString() {

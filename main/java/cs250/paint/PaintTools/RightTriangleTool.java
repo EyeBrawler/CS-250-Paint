@@ -1,6 +1,9 @@
 package cs250.paint.PaintTools;
 
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+
+import java.io.InputStream;
 
 public class RightTriangleTool extends PaintTool {
     private static final int NUMBER_OF_POINTS = 3;
@@ -50,6 +53,17 @@ public class RightTriangleTool extends PaintTool {
         //Permanently draw the triangle
         graphicsContext.strokePolygon(xPoints, yPoints, NUMBER_OF_POINTS);
 
+    }
+
+    public Image getShapeIcon() {
+        InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/RightTriangle.png");
+
+        if (resourceStream == null) {
+            System.out.println("Resource not found: /cs250/paint/icons/RightTriangle.png");
+            return null;
+        }
+
+        return new Image(resourceStream);
     }
 
     public void calculateRightTriangle(double currentX, double currentY) {

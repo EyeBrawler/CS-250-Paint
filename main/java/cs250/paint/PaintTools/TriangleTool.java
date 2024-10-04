@@ -1,6 +1,9 @@
 package cs250.paint.PaintTools;
 
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+
+import java.io.InputStream;
 
 public class TriangleTool extends PaintTool {
     //Arrays to store point values
@@ -45,6 +48,17 @@ public class TriangleTool extends PaintTool {
         //Permanently draw the triangle
         graphicsContext.strokePolygon(xPoints, yPoints, NUMBER_OF_POINTS);
 
+    }
+
+    public Image getShapeIcon() {
+        InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Triangle.png");
+
+        if (resourceStream == null) {
+            System.out.println("Resource not found: /cs250/paint/icons/Triangle.png");
+            return null;
+        }
+
+        return new Image(resourceStream);
     }
 
     public String toString() {

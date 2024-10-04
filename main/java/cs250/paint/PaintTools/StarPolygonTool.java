@@ -5,9 +5,7 @@ import javafx.scene.input.MouseEvent;
 
 import java.io.InputStream;
 
-
-public class PolygonTool extends PaintTool {
-
+public class StarPolygonTool extends PaintTool{
     //Arrays to store point values
     private double[] xPoints;
     private double[] yPoints;
@@ -17,13 +15,13 @@ public class PolygonTool extends PaintTool {
     private double centerX, centerY;
     private double firstX, firstY;
 
-    //In a regular polygon, the number of sides equals the number points
-    private int numberOfSides;
+    //Variable to store the number of the star will have
+    private int numberOfPoints;
 
     public void onMousePressed(MouseEvent mouseEvent) {
         //Resetting the arrays after each click as their size can change
-        xPoints = new double[numberOfSides];
-        yPoints = new double[numberOfSides];
+        xPoints = new double[numberOfPoints * 2];
+        yPoints = new double[numberOfPoints * 2];
 
         updateBrushParameters();
 
@@ -32,7 +30,6 @@ public class PolygonTool extends PaintTool {
         centerY = mouseEvent.getY();
 
         copyCanvas(); //For live draw
-
     }
 
     public void onMouseDragged(MouseEvent mouseEvent) {
@@ -43,52 +40,53 @@ public class PolygonTool extends PaintTool {
         firstY = mouseEvent.getY();
 
         //Calculate the points
-        calculatePolygon();
+        calculateStarPolygon();
 
         //Temporarily draw the polygon
-        graphicsContext.strokePolygon(xPoints, yPoints, numberOfSides);
-
+        graphicsContext.strokePolygon(xPoints, yPoints, numberOfPoints * 2);
     }
 
     public void onMouseReleased(MouseEvent mouseEvent) {
         pasteCanvasCopy();
 
-        calculatePolygon();
+        calculateStarPolygon();
 
         //Permanently draw the triangle
-        graphicsContext.strokePolygon(xPoints, yPoints, numberOfSides);
+        graphicsContext.strokePolygon(xPoints, yPoints, numberOfPoints * 2);
 
     }
 
-    //Calculating the points coordinates for the polygon
-    private void calculatePolygon() {
-        // Calculate the radius from the center to the first outside point
-        double radius = Math.sqrt(Math.pow(firstX - centerX, 2) + Math.pow(firstY - centerY, 2));
+    private void calculateStarPolygon() {
+        // Calculate the radius from the center to the first outer point
+        double outerRadius = Math.sqrt(Math.pow(firstX - centerX, 2) + Math.pow(firstY - centerY, 2));
 
         // Calculate the initial angle (the angle between the center and the first point)
         double angleOffset = Math.atan2(firstY - centerY, firstX - centerX);
 
-        // Calculate the angle between each point in the polygon
-        double angleIncrement = 2 * Math.PI / numberOfSides;
+        // Calculate the angle between the points
+        double angleIncrement = Math.PI / numberOfPoints; // Star polygons alternate between outer and inner points
 
-        // Loop through each vertex of the polygon
-        for (int i = 0; i < numberOfSides; i++) {
+        // Inner radius for the star (adjustable depending on how "deep" you want the star)
+        double innerRadius = outerRadius * 0.5; // This can be customized for different star shapes
+
+        // Loop through each point of the star
+        for (int i = 0; i < numberOfPoints * 2; i++) {
+            double radius = (i % 2 == 0) ? outerRadius : innerRadius; // Use outer for even indices and inner for odd
             double currentAngle = angleOffset + i * angleIncrement;
             xPoints[i] = centerX + radius * Math.cos(currentAngle);
             yPoints[i] = centerY + radius * Math.sin(currentAngle);
         }
-
     }
 
-    public void setNumberOfSides(int numberOfSides) {
-        this.numberOfSides = numberOfSides;
+    public void setNumberOfPoints(int numberOfPoints) {
+        this.numberOfPoints = numberOfPoints;
     }
 
     public Image getShapeIcon() {
-        InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Polygon.png");
+        InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/StarPolygon.png");
 
         if (resourceStream == null) {
-            System.out.println("Resource not found: /cs250/paint/icons/Polygon.png");
+            System.out.println("Resource not found: /cs250/paint/icons/StarPolygon.png");
             return null;
         }
 
@@ -96,6 +94,6 @@ public class PolygonTool extends PaintTool {
     }
 
     public String toString() {
-        return "Polygon";
+        return "Star Polygon";
     }
 }

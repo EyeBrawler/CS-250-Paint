@@ -1,6 +1,9 @@
 package cs250.paint.PaintTools;
 
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+
+import java.io.InputStream;
 
 public class StarTool extends PaintTool {
     double[] xPoints;
@@ -48,6 +51,17 @@ public class StarTool extends PaintTool {
 
         //Drawing the star permanently
         graphicsContext.strokePolygon(xPoints, yPoints, NUMBER_OF_VERTICES);
+    }
+
+    public Image getShapeIcon() {
+        InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Star.png");
+
+        if (resourceStream == null) {
+            System.out.println("Resource not found: /cs250/paint/icons/Star.png");
+            return null;
+        }
+
+        return new Image(resourceStream);
     }
 
     public void calculateStar(MouseEvent mouseEvent) {

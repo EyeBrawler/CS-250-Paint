@@ -2,6 +2,7 @@ package cs250.paint.PaintTools;
 
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
@@ -15,13 +16,14 @@ public abstract class PaintTool {
     protected Color toolColor;
     protected int toolWidth;
     protected boolean lineDashing;
+    protected Image shapeIcon;
 
     //A writable image object used for making copies of the canvas
     //Allows actively seeing shapes/lines before they are drawn
     protected WritableImage copiedCanvasImage;
 
-    //The PaintTool uses the zero parameter constructor because all tool attributes are updated during drawing, not
-    //When the object is initialized
+    //The PaintTool uses the zero parameter constructor when no icon needs to be stored in the class
+    // all tool attributes are updated during drawing, not when the PaintTool is initialized.
 
     public void setToolColor(Color toolColor) {
         this.toolColor = toolColor;
@@ -49,9 +51,7 @@ public abstract class PaintTool {
             graphicsContext.setLineDashes(50);
         } else {
             graphicsContext.setLineDashes((double[]) null);
-
         }
-
     }
 
     public void copyCanvas() {
@@ -81,6 +81,13 @@ public abstract class PaintTool {
     public abstract void onMouseDragged(MouseEvent mouseEvent);
 
     public abstract void onMouseReleased(MouseEvent mouseEvent);
+
+    /**
+     * Method to retrieve the icon used for a shape tool.
+     * @return
+     * An image object for containing the shape tool icon.
+     */
+    public abstract Image getShapeIcon();
 
     public abstract String toString();
 

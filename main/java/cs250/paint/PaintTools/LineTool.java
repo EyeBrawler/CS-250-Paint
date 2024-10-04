@@ -1,5 +1,6 @@
 package cs250.paint.PaintTools;
 
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 
 public class LineTool extends PaintTool {
@@ -41,6 +42,10 @@ public class LineTool extends PaintTool {
 
         //Drawing the final line
         graphicsContext.strokeLine(startX, startY, endX, endY);
+    }
+
+    public Image getShapeIcon() {
+        return null;
     }
 
     public String toString() {

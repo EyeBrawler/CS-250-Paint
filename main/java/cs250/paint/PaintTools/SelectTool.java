@@ -2,6 +2,7 @@ package cs250.paint.PaintTools;
 
 import javafx.geometry.Rectangle2D;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
@@ -13,10 +14,6 @@ import javafx.scene.paint.Color;
 public class SelectTool extends PaintTool {
     //Boolean for indicating if there is a region that has been selected with the selection tool
     private boolean regionSelected;
-
-    //Boolean to track if a selection tool operation has involved dragging the mouse
-    //Helps reduces exceptions being thrown. Issues still remain.
-    private boolean mouseDragged;
 
     //Boolean for indicating if we are going to cut the piece of the image out (leaving whitespace below)
     private boolean cutMode;
@@ -45,7 +42,6 @@ public class SelectTool extends PaintTool {
     public SelectTool() {
         regionSelected = false;
         cutMode = false;
-        mouseDragged = false;
 
     }
 
@@ -53,12 +49,6 @@ public class SelectTool extends PaintTool {
         graphicsContext.setLineDashes(PREVIEW_LINE_DASH_WIDTH);
         graphicsContext.setLineWidth(PREVIEW_LINE_WIDTH);
         graphicsContext.setStroke(PREVIEW_LINE_COLOR);
-
-        //Canvas offset values I have not been able to use for debugging alignment issue with yet
-        //double canvasOffsetX =
-        // graphicsContext.getCanvas().localToScene(graphicsContext.getCanvas().getBoundsInLocal()).getMinX();
-        //double canvasOffsetY
-        // = graphicsContext.getCanvas().localToScene(graphicsContext.getCanvas().getBoundsInLocal()).getMinY();
 
         if (regionSelected) {
             if (isWithinSelectedRegion(mouseEvent.getX(), mouseEvent.getY())) {
@@ -86,7 +76,7 @@ public class SelectTool extends PaintTool {
     public void onMouseDragged(MouseEvent mouseEvent) {
         pasteCanvasCopy(); // Revert canvas before redrawing
 
-        if (regionSelected && mouseDragged) {
+        if (regionSelected) {
             // Drag the selected area relative to the mouse movement
             drawPointX = mouseEvent.getX() - relativeGrabGapX;
             drawPointY = mouseEvent.getY() - relativeGrabGapY;
@@ -112,14 +102,11 @@ public class SelectTool extends PaintTool {
 
             // Draw the preview selection rectangle with its calculated dimensions
             graphicsContext.strokeRect(minX, minY, width, height);
-
-            //Recording that the mouse has been dragged
-            mouseDragged = true;
         }
     }
 
     public void onMouseReleased(MouseEvent mouseEvent) {
-        if (regionSelected && mouseDragged) {
+        if (regionSelected) {
             // Calculate the actual selection bounds
             double width = Math.abs(endX - startX);
             double height = Math.abs(endY - startY);
@@ -137,41 +124,41 @@ public class SelectTool extends PaintTool {
             regionSelected = false;
 
         } else {
-            if(mouseDragged) {
-                // Finalize the selection rectangle and take a snapshot of the area
-                endX = mouseEvent.getX();
-                endY = mouseEvent.getY();
+            // Finalize the selection rectangle and take a snapshot of the area
+            endX = mouseEvent.getX();
+            endY = mouseEvent.getY();
 
-                // Calculate selection bounds
-                //MinX and MinY help to find the part of the rectangle that is closed to the top left corner
-                //This is essential for taking a snapshot properly
-                double minX = Math.min(startX, endX);
-                double minY = Math.min(startY, endY);
-                double width = Math.abs(endX - startX);
-                double height = Math.abs(endY - startY);
+            // Calculate selection bounds
+            //MinX and MinY help to find the part of the rectangle that is closed to the top left corner
+            //This is essential for taking a snapshot properly
+            double minX = Math.min(startX, endX);
+            double minY = Math.min(startY, endY);
+            double width = Math.abs(endX - startX);
+            double height = Math.abs(endY - startY);
 
-                // Draw the selection rectangle
-                graphicsContext.strokeRect(minX, minY, width, height);
+            // Draw the selection rectangle
+            graphicsContext.strokeRect(minX, minY, width, height);
 
-                // Take a snapshot of the area
-                SnapshotParameters selectionParameters = new SnapshotParameters();
-                selectionParameters.setViewport(new Rectangle2D(minX, minY, width, height));
-                selectedArea = new WritableImage((int) width, (int) height);
-                graphicsContext.getCanvas().snapshot(selectionParameters, selectedArea);
+            // Take a snapshot of the area
+            SnapshotParameters selectionParameters = new SnapshotParameters();
+            selectionParameters.setViewport(new Rectangle2D(minX, minY, width, height));
+            selectedArea = new WritableImage((int) width, (int) height);
+            graphicsContext.getCanvas().snapshot(selectionParameters, selectedArea);
 
-                // Set start and end points
-                //The start and end points are updated to account that they need bee formatted with startX being upper left
-                //and endX being the lower right corner of the selection.
-                startX = minX;
-                startY = minY;
-                endX = minX + width;
-                endY = minY + height;
+            // Set start and end points
+            //The start and end points are updated to account that they need bee formatted with startX being upper left
+            //and endX being the lower right corner of the selection.
+            startX = minX;
+            startY = minY;
+            endX = minX + width;
+            endY = minY + height;
 
-                regionSelected = true; // Mark the region as selected
-                mouseDragged = false;
-            }
-
+            regionSelected = true; // Mark the region as selected
         }
+    }
+
+    public Image getShapeIcon() {
+        return null;
     }
 
     private boolean isWithinSelectedRegion(double x, double y) {

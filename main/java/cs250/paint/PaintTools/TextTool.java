@@ -1,6 +1,7 @@
 package cs250.paint.PaintTools;
 
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -72,6 +73,10 @@ public class TextTool extends PaintTool {
             graphicsContext.fillText(text, startX, startY + TEXT_OFFSET_HEIGHT); // Draw text near the start point
         });
 
+    }
+
+    public Image getShapeIcon() {
+        return null;
     }
 
     public String toString() {
