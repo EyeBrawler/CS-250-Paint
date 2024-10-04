@@ -1,0 +1,184 @@
+Pain(t) Version 0.6 - 10/4/2024
+
+New Features:
+*A button in the "Canvas" menu has been added to rotate the canvas in increments of 90 degrees.
+*A button in the "Canvas" menu has been added for mirroring the canvas both horizontally and vertically.
+*A new option in the "Canvas" menu has been added for sending autosave notifications. One notification will be sent per tab that is saved with autosave.
+*A bug related to autosave functionality has been fixed which now allows for autosave to only save tabs with unsaved changes, increasing performance.
+*Buttons in the toolbar and shape dropdown menu have been given icons.
+*Buttons/items in the toolbar have been given tooltips providing their name and functionality.
+*As a way to fix the misalignment bug with the select tool when the canvas is smaller than the window, smaller canvases will now position themselves in the upper left corner of the window rather than its center.
+*A logging system has been added. The majority user interactions will be logged and recorded to paint_operations.log in the logs folder located in the project root.
+*A star polygon tool that can draw a star with any number of points has been added. (it is used in a similar fashion to the polygon tool).
+
+Known Issues:
+*After using the line or shape tools the image will become slightly more fuzzy (besides the new line/shape just drawn).
+*Rectangles, squares, ellipses, and circles can only be drawn when dragging from the top left to the bottom right.
+*When clicking and not dragging with the select tool, an illegal argument exception will be very likely to be thrown to the command line. This does not impact user experience.
+*Undo and redo do not account for canvas resizing. This can be especially evident when rotating the canvas in a way that will change its shape or simply when resizing it.
+
+Improvements Expected in Next Release:
+*Improvements to the codebase through some class restructuring/reorganization
+*Full Javadoc documentation
+
+Features Expected Further in the Future:
+*Improvements on the rectangle, square, ellipse, and circle tools (primarily being able to draw when dragging in any direction)
+
+Links:
+https://github.com/EyeBrawler/CS-250-Paint
+
+
+
+Pain(t) Version 0.5 - 9/29/2024
+
+New Features:
+*A "Save All" button has been added to the "File" menu in the menu bar and saves all canvas' that have a file associated with them.
+*"Save all" functionality has also been built into smart saving
+*Autosave functionality has been added. All canvas' that are associated with a saved file and have unsaved changes will autosave every five minutes. The timer will only run when one of these saved canvas' is selected.
+*An autosave timer can be viewed in the menu bar under "Canvas" options.
+*A new check box in the "Canvas" portion of the menubar can toggle if the current image should be uploaded to the web server for viewing on localhost:8080. This option is
+selectable per tab and and upon saving the tab (either through autosave or manual saving) a snapshot of the tab will be uploaded to the server. The option is disabled on a new unsaved canvas. The URL of the image
+can be found at localhost:8080/"Name of image."
+*A new data loss warning has been added within the "save as" dialog when file formats are being converted.
+*For Pain(t) developers, 3 new units have been implemented.
+	*One for the RightTriangleTool calculateRightTriangle method
+	*One for the AutosaveTimer formatTime method
+	*One for the FileManager getFileExtension method
+*Additionally for developers, Javadoc comments have been added throughout the project allowing for the use of Javadocs.
+
+Known Issues:
+*After using the line or shape tools the image will become slightly more fuzzy (besides the new line/shape just drawn).
+*Rectangles, squares, ellipses, and circles can only be drawn when dragging from the top left to the bottom right.
+*When the canvas is smaller than the window, the select tool will not align the dragged area properly.
+*When clicking and not dragging with the select tool, an illegal argument exception will be very likely to be thrown to the command line. This does not impact user experience.
+
+Features Expected in Next Release:
+*Icons for buttons and tools
+*Mirroring and rotating the canvas
+*Rotating selection for the select tool
+*Under the hood user action logging system
+*Tooltips for buttons
+
+Features Expected Further in the Future:
+*Improvements on the rectangle, square, ellipse, and circle tools (primarily being able to draw when dragging in any direction)
+
+Links:
+https://github.com/EyeBrawler/CS-250-Paint
+
+
+
+Pain(t) Version 0.4 - 9/20/2024
+
+New Features:
+*Drawing tools have received their own dedicated place in the toolbar
+*The canvas tabbing system has been fully implemented with the ability to open an image in a new tab, the current tab, or make a tab with a blank canvas.
+*There is a new option in the canvas menu for clearing it. Before clearing, you are asked for confirmation.
+*Undo and redo functionality has been implemented within the edit menu and traditional key bindings.
+*The select area tool can be used to both cut and copy rectangular regions of a canvas. To switch between cutting and copying, there is a check box in the "Edit" menu.
+*The old triangle tool has been moved to the right triangle tool
+*The new triangle tool allows the drawing of an equilateral triangle.
+*There is a new polygon tool that allows the drawing of a regular polygon with any number of sides. Side control can be found with the "Shape" menu in the toolbar.
+*There is a new text tool that can be used to write text to the screen. Text color can be changed along with font size through the tool width spinner box.
+
+Known Issues:
+*After using the line or shape tools the image will become slightly more fuzzy (besides the new line/shape just drawn).
+*Rectangles, squares, ellipses, and circles can only be drawn when dragging from the top left to the bottom right.
+*When the canvas is smaller than the window, the select tool will not align the dragged area properly.
+
+Features Expected in Next Release:
+*Autosave that runs on a timer
+*Viewing autosaved canvas via web browser 
+
+Features Expected Further in the Future:
+*Ability to zoom image view in and out
+*Improvements on the rectangle, square, ellipse, and circle tools (primarily being able to draw when dragging in any direction)
+
+Links:
+https://github.com/EyeBrawler/CS-250-Paint
+
+
+
+Pain(t) Version 0.3 - 9/16/2024
+
+New Features:
+*A preview of the line to be drawn with the line tool can be seen when clicking and dragging the cursor
+*Changed background behind canvas to a gray color (which allows the cavas boundaries to be seen on a blank image)
+*Tools for drawing rectangles, squares, ellipses, circles, triangles, and stars (including shooting stars) has been added
+*A freehand pencil tool and eraser tools have been added
+*Dashed lines/shapes can be drawn
+*A checkbox in the toolbar has been added to choose between drawing solid or dashed lines and shapes.
+*A new option in the help menu has been added
+*When closing Pain(t) and an opened file has not been saved, a confirmation dialog with saving options will pop up.
+*There is a new "canvas" menu in the menu bar with a button for activating a dialog box that can be used to resize the canvas
+
+Known Issues:
+*After using the line or shape tools the image will become slightly more fuzzy (besides the new line/shape just drawn).
+*Rectangles, squares, ellipses, and circles can only be drawn when dragging from the top left to the bottom right.
+
+Features Expected in Next Release:
+*Undo and redo options available in the edit menu and with key bindings
+*Clear canvas option within "Canvas" menu
+*select tool for selecting regions of the canvas
+*copy, cut, and paste tools that can be used in conjunction with the select tool
+*New text tool
+*Fully working tabbing system that allows the opening of multiple images/canvas'
+
+Features Expected Further in the Future:
+*Ability to zoom image view in and out
+*Improvements on the rectangle, square, ellipse, and circle tools (primarily being able to draw when dragging in any direction)
+
+Links:
+https://github.com/EyeBrawler/CS-250-Paint
+
+
+
+Pain(t) Version 0.2 - 9/6/2024
+
+New Features:
+*Ability to draw a straight line to the canvas (which can be saved)
+*Line width can be controlled using new spinner in toolbar
+*Line color can be controlled with new color choosing dialog window available from the toolbar
+*Renamed "Close" to "Quit Pain(t)" for more visual distinction in the file menu
+*Added horizontal separator within the file menu above the "Quit Pain(t) button for additional visual distinction
+
+Known Issues:
+N/A
+
+Features Expected in Next Release:
+*Ability to draw shapes (circle, rectangle, ellipse, triangle, etc.)
+*Additional keyboard shortcut for "about" option in help menu
+*Additional labeling for selected color (hexadecimal, RGB, and English name together) and tool width
+*Ability to resize canvas to a larger or smaller size
+*Pencil tool for freehand drawing
+*Ability to have dashed strokes for shapes and lines
+*Warning dialog box displayed when closing image without saving
+*Tabs available to have multiple opened images/canvas'
+*Java Pun
+*Eraser tool
+
+Features Expected Further in the Future:
+*Ability to zoom image view in and out
+*Ability to see a preview of line being drawn while still dragging the cursor to choose the line's endpoint
+
+
+
+Pain(t) Version 0.1 - 8/30/2024
+
+New Features:
+*Menu bar is displayed with file options such as "Save As","Open","About", and "Quit"
+*Can Open and display image files in  PNG, JPG, and BMP formats
+*"Save" can be used to save the currently displayed canvas to the open file
+*When file format and location is unknown (such as a blank canvas), the save button will automatically display Save As dialog
+*"Save As" menu button and dialog allow saving the canvas to an image file in the PNG, JPG, or BMP formats.
+*About Option displays Pain(t) version number and description
+
+Known Issues:
+N/A
+
+Features Expected in Next Release:
+*Ability to draw a line on the canvas
+*Change Width of the line drawn
+*Openable color chooser window
+
+Features Expected Further in the Future:
+*Ability to zoom image view in and out
