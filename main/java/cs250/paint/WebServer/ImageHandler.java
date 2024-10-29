@@ -9,7 +9,7 @@ import cs250.paint.CanvasTab;
  * specifically designed to display an image.
  */
 class ImageHandler implements HttpHandler {
-    CanvasTab canvasTab;
+    private CanvasTab canvasTab;
 
     /**
      * Constructs an ImageHandler object. This single parameter constructor passes in a specific tab that will have its

@@ -8,6 +8,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ * A class containing the code responsible for displaying an image (or appropriate message) on a context (page) for the
+ * web server. This class implements runnable and has a run method so this code can be run on a different thread as a
+ * task.
+ */
 public class ImageHandlerTask implements Runnable {
     private final BufferedImage bufferedImage;
     private final HttpExchange exchange;
@@ -15,7 +20,7 @@ public class ImageHandlerTask implements Runnable {
     private final boolean imageRequested;
 
     /**
-     * Initializes a ImageHandlerTask with the variables necessary to write the image to a webpage on a separate thread
+     * Initializes an ImageHandlerTask with the variables necessary to write the image to a webpage on a separate thread
      * for the user.
      * @param exchange
      * The exchange object used and needed by the web server.
@@ -24,7 +29,7 @@ public class ImageHandlerTask implements Runnable {
      * @param fileExtension
      * The extension of the buffered image.
      * @param imageRequested
-     * If flag for if the Canvas has requested the image
+     * Flag for if the canvas should be uploaded to the web server.
      */
     public ImageHandlerTask(HttpExchange exchange, BufferedImage bufferedImage, String fileExtension,
                             boolean imageRequested) {
@@ -34,6 +39,10 @@ public class ImageHandlerTask implements Runnable {
         this.imageRequested = imageRequested;
     }
 
+    /**
+     * Handling a server request by either displaying the requested image or text indicating the image has not been
+     * requested in case the context is still available when the image is not requested.
+     */
     public void run() {
         try {
             if(bufferedImage == null || !imageRequested) {
