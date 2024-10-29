@@ -1,3 +1,23 @@
+Pain(t) Version 0.7 - 10/28/2024
+
+Fixes:
+*Errors associated with clicking and the select tool have been fixed
+
+Improvements:
+*Besides the "module-info.java" file and any default constructors, Javadoc has been fully implemented.
+*UML Diagrams Have Been Added to Github
+
+Known Issues:
+*After using the line or shape tools the image will become slightly more fuzzy (besides the new line/shape just drawn).
+*Rectangles, squares, ellipses, and circles can only be drawn when dragging from the top left to the bottom right.
+*Undo and redo do not account for canvas resizing. This can be especially evident when rotating the canvas in a way that will change its shape or simply when resizing it.
+
+Links:
+Github: https://github.com/EyeBrawler/CS-250-Paint
+Demonstration Video: https://youtu.be/_NgTMStPWys
+
+
+
 Pain(t) Version 0.6 - 10/4/2024
 
 New Features:
