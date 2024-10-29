@@ -176,6 +176,8 @@ public class CanvasTab extends Tab{
     /**
      * Getting the buffered image associated with the canvas.
      * Used primarily for getting a recently saved snapshot of the canvas in a format that can easily be used.
+     * @return
+     * The bufferedImage backup of when the canvas was last saved (or a new image was opened)
      */
     public BufferedImage getBufferedImage() {
         return bufferedImage;
@@ -192,6 +194,8 @@ public class CanvasTab extends Tab{
 
     /**
      * Returns a string indicating the type of image file being displayed in the canvas
+     * @return
+     * A String containing the file type for the image opened in the tab.
      */
     public String getFileType() {
         return fileType;
@@ -449,7 +453,7 @@ public class CanvasTab extends Tab{
     }
 
     /**
-     * Rotates the canvas by a passed in value
+     * Rotates the canvas 90 degrees.
      */
     public void rotateCanvas() {
         // Capture the current width and height of the canvas
@@ -483,6 +487,9 @@ public class CanvasTab extends Tab{
         undoStack.push(canvas.snapshot(undoRedoParams, null));
     }
 
+    /**
+     * Mirrors the canvas horizontally.
+     */
     public void mirrorCanvasHorizontally() {
         double width = canvas.getWidth();
         double height = canvas.getHeight();
@@ -510,6 +517,9 @@ public class CanvasTab extends Tab{
         undoStack.push(canvas.snapshot(undoRedoParams, null));
     }
 
+    /**
+     * Mirrors the canvas vertically.
+     */
     public void mirrorCanvasVertically() {
         double width = canvas.getWidth();
         double height = canvas.getHeight();
@@ -537,6 +547,10 @@ public class CanvasTab extends Tab{
         undoStack.push(canvas.snapshot(undoRedoParams, null));
     }
 
+    /**
+     * Sets up smart saving (letting the user know before closing a tab with unsaved changes) by changing tab closing
+     * behavior.
+     */
     private void setupTabSmartSaving () {
         setOnCloseRequest(event -> {
             if (unsavedChanges) {

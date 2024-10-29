@@ -10,7 +10,7 @@ import javafx.util.Duration;
 import org.controlsfx.control.Notifications;
 
 /**
- * The AutosaveTimer class controls the file autosave timer for pain(t).
+ * The AutosaveTimer class controls the file autosave timer for Pain(t).
  * This includes managing a label to remaining time. Additionally, the timing system in this class also manipulates
  * the application's web server checkbox because the webserver only needs to display an image when the autosave timer
  * is running.
@@ -42,6 +42,10 @@ public class AutosaveTimer {
      * @param webServerCheckBox
      * The CheckMenuItem for the PaintWebServer that the autosave timer will help manage. This includes things such as
      * disabling the checkbox when the autosave timer is off.
+     * @param canvasTabManager
+     * The CanvasTabManager for accessing multiple tabs that may need to be autosaved at once.
+     * @param fileManager
+     * The FileManager used for completing file save operations during autosave.
      */
     public AutosaveTimer(Label timerLabel, CheckMenuItem webServerCheckBox, CanvasTabManager canvasTabManager,
                          FileManager fileManager) {

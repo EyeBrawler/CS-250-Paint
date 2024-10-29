@@ -6,8 +6,10 @@ import javafx.scene.paint.Color;
 
 import java.util.*;
 
-//The Purpose of this class is to store all the paint tools and swap between them,
-//It is also the place where instances of tools of different types are constructed
+/**
+ * The Purpose of this class is to store all the paint tools and swap between them,
+ * It is also the place where instances of shape tools of different types are constructed
+ */
 public class PaintToolbox {
 
     //List all shape paint tools are stored in
@@ -15,9 +17,10 @@ public class PaintToolbox {
 
     private PaintTool activeTool;
 
-    //Information that all tools in the toolbox need initially
-    //Getting the color picker so current colors can be found for tools in the toolbox
-    //Variables that will have values brought in from Scene Controller
+    /**
+     * Initializing a PaintToolbox by creating paint tools for drawing shapes and adding them to a list of
+     * shapePaintTools.
+     */
     public PaintToolbox() {
         //Toolbox Setup
         shapePaintTools = new ArrayList<>();
@@ -36,10 +39,28 @@ public class PaintToolbox {
     }
 
     //Self Explanatory Getters and Setters
+    /**
+     * Method to get the currently active PaintTool
+     * @return
+     * A PaintTool object that is the active PaintTool
+     */
     public PaintTool getActiveTool() {
         return activeTool;
     }
 
+    /**
+     * Sets the active PaintTool and all of its attributes.
+     * @param activeTool
+     * The tool that will be made active.
+     * @param graphicsContext
+     * A GraphicsContext the tool will draw on.
+     * @param toolColor
+     * A Color object representing the color the active tool will use.
+     * @param toolWidth
+     * An integer value specifying the line thickness/width the active tool will have.
+     * @param lineDashing
+     * Whether the new active tool will have line dashing enabled or disabled.
+     */
     public void setActiveTool(PaintTool activeTool, GraphicsContext graphicsContext, Color toolColor, int toolWidth,
                               boolean lineDashing) {
         this.activeTool = activeTool;
@@ -53,6 +74,12 @@ public class PaintToolbox {
 
     }
 
+    /**
+     * Returns a list of PaintTools that are for drawing shape (and therefore found within the shape tool combo
+     * box)
+     * @return
+     * A list of PaintTools that are for drawing shapes.
+     */
     public List<PaintTool> getShapeTools() {
         return shapePaintTools;
     }

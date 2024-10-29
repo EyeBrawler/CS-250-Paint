@@ -3,35 +3,30 @@ package cs250.paint;
 import cs250.paint.PaintLogger.PaintLogger;
 import cs250.paint.PaintTools.*;
 import cs250.paint.WebServer.PaintWebServer;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
 import java.io.*;
-import java.util.Optional;
 
-
+/**
+ * The class which controls everything in the primary FXML file. (Essentially, everything inside Pain(t) except for
+ * what is contained in the tabPane).
+ */
 public class SceneController {
 
     //Reference to stage
     private Stage stage;
 
-    //The main anchor pane that all components stem from
-    //Injected so that the stage can be retrieved
-    @FXML
-    AnchorPane mainPane;
-
     //The Tab Pane in where tabs for different open canvas' are
     @FXML
-    TabPane tabPane;
+    private TabPane tabPane;
 
     //This value will come from the CanvasTabManager Class
     private CanvasTabManager canvasTabManager;
@@ -108,10 +103,12 @@ public class SceneController {
     private static final int DEFAULT_TOOL_WIDTH = 10;
 
     //The paintToolbox to manage paint tools
-    PaintToolbox paintToolbox;
+    private PaintToolbox paintToolbox;
 
-    //Function ran by JavaFX after the scene is loaded
-    //This contains a significant amount of miscellaneous setup code.
+    /**
+     * Function ran by JavaFX after the scene is loaded
+     * This contains a significant amount of setup code.
+     */
     @FXML
     private void initialize() {
         //Creating an instance of my paintToolbox class
@@ -158,11 +155,15 @@ public class SceneController {
 
     }
 
+    /**
+     * A method for everything that must run directly after the scene has actually been initialized. These are
+     * operations that need access to the stage (which can only be retrieved after the primary scene is created).
+     */
     public void postInitialization() {
-        //Running smartSaveSetup() method
+        //Running smartSaveSetup() method from the DialogManger class
         //It allows a confirmation dialog box when the user has modified the canvas but not yet saved.
         //It is occurring here because this is the next code that runs after the initialize method.
-        smartSaveSetup();
+        DialogManager.smartSaveSetup(stage, canvasTabManager, fileManager);
 
         //Because the file manager needs access to the stage and the stage is not available until postInitialization,
         //The fileManager is initialized here
@@ -178,53 +179,40 @@ public class SceneController {
 
     }
 
-    //Setter method to inject the Stage into this class
-    //Called in main class
+    /**
+     * Setter method to inject the Stage into this class. Called in main class.
+     * @param stage
+     * The main stage (which can be thought of as the main window)
+     */
     public void setStage(Stage stage) {
         this.stage = stage;
     }
 
-    //Method for the about popup that can be found in the menu bar
+    /**
+     * Method for the about popup that can be found in the menu bar.
+     */
     public void aboutMessage() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("About");
         alert.setHeaderText("Pain(t)");
-        alert.setContentText("Version 0.6\nPain(t) is a less professional recreation of MS Paint\nCreated By Sam Thyen");
+        alert.setContentText("Version 0.7\nPain(t) is a less professional recreation of MS Paint\nCreated By Sam Thyen");
 
         alert.showAndWait();
     }
 
 
     //Method for opening an image file.
+    /**
+     * Runs when the user clicks the open button within the file menu. Calls the DialogManager's openFile
+     * method.
+     */
     public void openDialog() {
-        //Warning the user that opening an image in the current tab will overwrite unsaved changes
-        if (canvasTabManager.getActiveTab().hasUnsavedChanges()) {
-            //Constructing a confirmation alert
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Are you sure?");
-            alert.setHeaderText("Opening an image in this tab will overwrite your unsaved changes.");
-            alert.setContentText("Do you want to open an image in this tab?");
-
-            alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
-
-            Optional<ButtonType> result = alert.showAndWait();
-
-            //result should always be present
-            //If not, something is very wrong
-            if (result.isPresent()) {
-
-                //Dialog Box Outcomes
-                if (result.get() == ButtonType.YES) {
-                    //user chooses yes
-                    fileManager.openImage(canvasTabManager.getActiveTab());
-
-                } //If user chooses no, we do nothing.
-            }
-        } else {
-            fileManager.openImage(canvasTabManager.getActiveTab());
-        }
+        DialogManager.openFile(canvasTabManager, fileManager);
     }
 
+    /**
+     * Opens a new tab when the user clicks the "Open in a new tab" button in the file menu.
+     */
     public void openNewTabDialog() {
         //Making a new tab
         canvasTabManager.newTab();
@@ -237,42 +225,50 @@ public class SceneController {
         tabPane.getSelectionModel().select(tabPane.getTabs().size() - 2);
     }
 
+    /**
+     * Runs when the user pushes the save as button in the file menu. Calls the file manager class for this dialog.
+     */
     public void saveAsDialog() {
         fileManager.saveAsDialog(canvasTabManager.getActiveTab());
     }
 
-
+    /**
+     * Runs when the user pushes the save button in the file menu. Calls the FileManager to save the Canvas and display
+     * appropriate dialogs.
+     */
     public void saveCanvas() {
         fileManager.saveCanvas(canvasTabManager.getActiveTab());
     }
 
+    /**
+     * Runs when the user pushes the "Save All Tabs" button. Calls the DialogManager for this operation.
+     */
     public void saveAllTabs() {
-        if(canvasTabManager.hasNewCanvas()) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Warning");
-            alert.setHeaderText("Unsaved New Canvas Tabs Open");
-            alert.setContentText("Your open new canvas tabs will not be saved with this operation.");
-
-            alert.showAndWait();
-        }
-        for (Tab tab : tabPane.getTabs()) {
-            //Only saving if our tab has unsaved changes, is not a blank canvas, and is actually a canvas tab
-            if(tab instanceof CanvasTab && !((CanvasTab) tab).hasNewCanvas()) {
-                fileManager.saveCanvas((CanvasTab) tab);
-            }
-        }
+        DialogManager.saveAllTabs(canvasTabManager, fileManager);
     }
 
+    /**
+     * Runs when the user pushes the undo button or uses its respective key binding. Calls the CanvasTabManager for this
+     * operation.
+     */
     public void undo() {
         canvasTabManager.getActiveTab().undo();
         PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(), "Undo Attempted");
     }
 
+    /**
+     * Runs when the user pushes the redo button or uses its respective key binding. Calls the CanvasTabManager for this
+     * operation.
+     */
     public void redo() {
         canvasTabManager.getActiveTab().redo();
         PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Redo Attempted");
     }
 
+    /**
+     * Runs when the toggle check box is pushed for disabling or enabling cutting rather than copying with the select
+     * tool. Calls the PaintToolBox and CanvasTabManager
+     */
     public void cutSelectionToggle() {
         if (paintToolbox.getActiveTool() instanceof SelectTool) {
             ((SelectTool) paintToolbox.getActiveTool()).setCutMode(cutModeCheckBox.isSelected());
@@ -280,8 +276,10 @@ public class SceneController {
         }
     }
 
-    //This function creates a custom dialog box where the user can resize the canvas.
-    //See canvas tab manager for more details
+    /**
+     * This function creates a custom dialog box where the user can resize the canvas.
+     * See canvas tab manager for more details
+     */
     public void resizeCanvas() {
         canvasTabManager.getActiveTab().resizeCanvas();
         PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Canvas Resize Attempted");
@@ -370,8 +368,12 @@ public class SceneController {
         shapeToolChoice.setButtonCell(shapeToolChoice.getCellFactory().call(null));
     }
 
-    //Method to change the active shape tool based on the shapeToolChoice ComboBox
-    public void setShapeTool(ActionEvent event) {
+    /**
+     * Changes the active shape tool based on the shapeToolChoice ComboBox
+     * @param event
+     * The action event associated with the shape tool combo box.
+     */
+    private void setShapeTool(ActionEvent event) {
         paintToolbox.setActiveTool(shapeToolChoice.getValue(), canvasTabManager.getActiveTab().getGraphicsContext(),
                 colorPicker.getValue(), toolWidthSpinner.getValue(), dashingCheckBox.isSelected());
 
@@ -381,8 +383,10 @@ public class SceneController {
                 paintToolbox.getActiveTool().toString() + " Tool Selected");
     }
 
-    //Method for setting the active toolbar tool.
-    //It also deselects any tool that is currently selected within the shape tools
+    /**
+     * Used for setting the active toolbar tool. It also deselects any tool that is currently selected within the shape
+     * tools
+     */
     public void setToolbarTool() {
         //First checking if the there is no toggle buttons selected, in this case the tool choice will default back to
         //the selected shape
@@ -411,7 +415,9 @@ public class SceneController {
 
     }
 
-    //Setting up the spinner for tool width
+    /**
+     * Sets up the spinner for tool width control
+     */
     //It requires the value factory to actually have tool width numbers inside the spinner
     private void setupToolWidthSpinner() {
         //Ranges for the spinner are set to the constant variables for tool width limits
@@ -430,9 +436,11 @@ public class SceneController {
 
     }
 
-    //This method sets up the spinner found in the shape section of the menu bar.
-    //The spinner is for controlling the number of sides the polygon tool's polygon will have
-    public void setupPolygonSideSpinner() {
+    /**
+     * Sets up the spinner found in the shape section of the menu bar.
+     * The spinner is for controlling the number of sides the polygon tool's polygon will have.
+     */
+    private void setupPolygonSideSpinner() {
         //Creating a spinner value factory with the minimum and maximum ranges available for polygon side #
         SpinnerValueFactory<Integer> sideValueFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(MIN_POLYGON_SIDES, MAX_POLYGON_SIDES);
@@ -460,9 +468,11 @@ public class SceneController {
         }
     }
 
-    //This method sets up the star polygon spinner found in the shape section of the menu bar.
-    //The spinner is for controlling the number of sides the star polygon tool's polygon will have
-    public void setupStarPolygonPointSpinner() {
+    /**
+     * Sets up the star polygon spinner found in the shape section of the menu bar.
+     * The spinner is for controlling the number of points the star polygon tool's polygon will have.
+     */
+    private void setupStarPolygonPointSpinner() {
         //Creating a spinner value factory with the minimum and maximum ranges available for star polygon point #
         SpinnerValueFactory<Integer> pointValueFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(MIN_STAR_POLYGON_POINTS, MAX_STAR_POLYGON_POINTS);
@@ -490,7 +500,9 @@ public class SceneController {
         }
     }
 
-    //Method for updating the active tool's color when the colorPicker chooses a different color
+    /**
+     * Updates the active tool's color when the colorPicker chooses a different color.
+     */
     public void setColor() {
         paintToolbox.getActiveTool().setToolColor(colorPicker.getValue());
 
@@ -498,6 +510,9 @@ public class SceneController {
                 "Tool Color Changed to " + colorPicker.getValue());
     }
 
+    /**
+     * Runs when the user clicks the toggle for dashing lines and shapes. Calls the PaintToolbox for this operation.
+     */
     public void dashingCheckToggled() {
         //If the box is checked
         //Runs if the box is not checked
@@ -507,6 +522,9 @@ public class SceneController {
 
     }
 
+    /**
+     * Runs the secret Easter egg. :)
+     */
     public void easterEgg() {
         try {
             //Using the FXML loader to load the special FXML file
@@ -541,110 +559,10 @@ public class SceneController {
         }
     }
 
-    public void smartSaveSetup() {
-        //Setting the stage's new close behavior for smart saving
-        stage.setOnCloseRequest(event -> {
-            if (canvasTabManager.hasUnsavedChanges()) {
-                event.consume();  // Stop the default close behavior
-
-                //If the tab pane has only two tabs (one open tab and the new tab button (which is technically a tab)
-                //Then we will ask the user if they want to save the file
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                if(tabPane.getTabs().size() <= 2) {
-                    //Constructing a confirmation alert
-                    alert.setTitle("Save Changes?");
-                    alert.setHeaderText("You have attempted to exit Pain(t) without saving.");
-                    alert.setContentText("Would you like to save the tab before closing?");
-
-
-                    alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
-
-                    Optional<ButtonType> result = alert.showAndWait();
-
-                    //result should always be present
-                    //If not, something is very wrong
-                    if (result.isPresent()) {
-
-                        //Dialog Box Outcomes
-                        if (result.get() == ButtonType.YES) {
-                            //user chooses yes
-                            fileManager.saveCanvas(canvasTabManager.getActiveTab());
-                            stage.close();
-                            Platform.exit();
-                            System.exit(0);
-
-                        } else if (result.get() == ButtonType.NO) {
-                            // ... user chose CANCEL or closed the dialog
-                            //Stay in the application
-                            stage.close();
-                            Platform.exit();
-                            System.exit(0);
-
-                        } else {
-                            event.consume();
-                        }
-                    }
-                } else {
-                    //In this case the user has multiple tabs open, and we are just going to ask them if they are sure
-                    //they want to exit instead.
-                    //Constructing a confirmation alert
-                    alert.setTitle("Unsaved Changes");
-                    alert.setHeaderText("You have attempted to exit Pain(t) unsaved changes.");
-                    alert.setContentText("Would you like to save all open tabs that have associated files?");
-
-                    alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
-
-                    Optional<ButtonType> result = alert.showAndWait();
-
-                    //result should always be present
-                    //If not, something is very wrong
-                    if (result.isPresent()) {
-
-                        //Dialog Box Outcomes
-                        if (result.get() == ButtonType.YES) {
-                            //Logging Operation and Shutting Down the logger
-                            PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Paint Exited");
-                            PaintLogger.shutdownLogger();
-
-                            //user chooses yes, save all tabs
-                            //then Close Pain(t)
-                            saveAllTabs();
-                            stage.close();
-                            Platform.exit();
-                            System.exit(0);
-
-                        } else if(result.get() == ButtonType.NO) {
-                            //Logging Operation and Shutting Down the logger
-                            PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Paint Exited");
-                            PaintLogger.shutdownLogger();
-
-                            //User chooses no
-                            //Just Close Pain(t)
-                            stage.close();
-                            Platform.exit();
-                            System.exit(0);
-                        } else {
-                            //If they said cancel we just consume the event and keep Pain(t) running.
-                            event.consume();
-                        }
-                    }
-                }
-            } else {
-                //Logging Operation and Shutting Down the logger
-                PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Paint Exited");
-                PaintLogger.shutdownLogger();
-
-                //What we do if the user has saved everything. (close Pain(t))
-                stage.close();
-                Platform.exit();
-                System.exit(0);
-            }
-
-        });
-
-    }
-
-    public void autosaveSetup() {
+    /**
+     * Sets up autosave functionally. Specifically, the timer's start and stop behavior.
+     */
+    private void autosaveSetup() {
         //Setting up Autosave by creating a AutosaveTimer Object
         autosaveTimer = new AutosaveTimer(autosaveTimerLabel, webServerCheckBox, canvasTabManager, fileManager);
 
@@ -671,58 +589,27 @@ public class SceneController {
         PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Autosave Notifications Toggled");
     }
 
-    //This method is called when the user closes a tab from the file menu
+    /**
+     * Called when the user closes a tab from the file menu. Calls the DialogManager to do so.
+     */
     public void closeTab() {
+        DialogManager.closeTab(canvasTabManager, fileManager, webServer);
+
         PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Tab Closed");
-
-        if (canvasTabManager.getActiveTab().hasUnsavedChanges()) {
-            //Constructing a confirmation alert
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Save Changes?");
-            alert.setHeaderText("You have attempted to close a tab without saving its changes.");
-            alert.setContentText("Would you like to save the selected tab before closing it?");
-
-
-            alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
-
-            Optional<ButtonType> result = alert.showAndWait();
-
-            //result should always be present
-            //If not, something is very wrong
-            if (result.isPresent()) {
-
-                //Dialog Box Outcomes
-                if (result.get() == ButtonType.YES) {
-                    //user chooses Yes
-                    fileManager.saveCanvas(canvasTabManager.getActiveTab());
-                    canvasTabManager.closeSelectedTab();
-
-                } else if (result.get() == ButtonType.NO) {
-                    //User chooses no
-                    //Just close the tab
-
-                    //Make sure the web server cannot display the image anymore by removing the context.
-                    webServer.removeImagePage(canvasTabManager.getActiveTab().getOpenFile().getName());
-
-                    canvasTabManager.closeSelectedTab();
-
-                }
-                //When the user chooses cancel, nothing happens
-            }
-
-        } else {
-            //What we do if the user has saved. (close the tab only)
-            canvasTabManager.closeSelectedTab();
-        }
     }
 
+    /**
+     * Runs when the user pushes the clear canvas button. The clearing itself occurs within the active CanvasTab.
+     */
     public void clearCanvas() {
         canvasTabManager.getActiveTab().clearCanvas();
 
         PaintLogger.logOperation(canvasTabManager.getActiveTab().getText(),"Canvas Clearing Attempted");
     }
 
-
+    /**
+     * Quits Pain(t). Runs when the user pushes the "Quit Pain(t)" button in the file menu.
+     */
     public void quitPaint() {
         //Simulating the closing of the window by firing an event
         //Will allow the smartSave method to still run.
