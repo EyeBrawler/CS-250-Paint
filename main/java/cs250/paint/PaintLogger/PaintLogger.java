@@ -7,6 +7,9 @@ import java.util.concurrent.Executors;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
+/**
+ * An entirely static class for logging any kind of pain(t) operation.
+ */
 public class PaintLogger {
     private static final Logger logger = Logger.getLogger(PaintLogger.class.getName());
     private static FileHandler fileHandler;
@@ -36,13 +39,21 @@ public class PaintLogger {
         }
     }
 
-    // Method to log operations asynchronously
+    /**
+     * Logs an operation asynchronously
+     * @param fileName
+     * The name of the file associated with the operation to be logged
+     * @param operation
+     * A brief description of the operation being logged
+     */
     public static void logOperation(String fileName, String operation) {
         String message = "File: " + fileName + " - " + operation;
         executor.submit(() -> logger.info(message));
     }
 
-    // Clean up resources
+    /**
+     * Shuts down and cleans up all the PaintLogger's resources in preparation for closing the program.
+     */
     public static void shutdownLogger() {
         executor.shutdown();
         fileHandler.close();
