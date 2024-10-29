@@ -7,13 +7,20 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
-//The select tool selects a specific region of the canvas and holds that selection so that the
-//copy and paste tools can work with it
-//The tool is first used to select a region
-//When it is used again it can drag the region
+/**
+ * The select tool is a paint tool that allows for the selection of a canvas region that can be moved in a subsequent
+ * use of the tool. It has modes for both copying a selection and cutting one. For each use of the tool, it will
+ * alternate between defining a rectangular region for selection and dragging the selected region. If no region has
+ * been selected successfully during the selection defining phase, the tool will allow the user to try to define a
+ * region again.
+ */
 public class SelectTool extends PaintTool {
     //Boolean for indicating if there is a region that has been selected with the selection tool
     private boolean regionSelected;
+
+    //Boolean for detecting if the user dragged the mouse since it was initially pressed. Prevents an error when
+    //trying to work with an area to move but no area has been selected.
+    private boolean mouseDragged;
 
     //Boolean for indicating if we are going to cut the piece of the image out (leaving whitespace below)
     private boolean cutMode;
@@ -39,16 +46,27 @@ public class SelectTool extends PaintTool {
     private static final double PREVIEW_LINE_WIDTH = 1;
     private static final Color PREVIEW_LINE_COLOR = Color.BLUE;
 
+    /**
+     * Constructs a SelectTool in which no region has been selected and cut mode is disabled.
+     */
     public SelectTool() {
         regionSelected = false;
         cutMode = false;
 
     }
 
+    /**
+     * Handles either beginning a new selection or setting the place to grab an already defined selection when the user
+     * first makes a mouse click.
+     * @param mouseEvent
+     * The MouseEvent associated with the user's click
+     */
     public void onMousePressed(MouseEvent mouseEvent) {
         graphicsContext.setLineDashes(PREVIEW_LINE_DASH_WIDTH);
         graphicsContext.setLineWidth(PREVIEW_LINE_WIDTH);
         graphicsContext.setStroke(PREVIEW_LINE_COLOR);
+
+        mouseDragged = false;
 
         if (regionSelected) {
             if (isWithinSelectedRegion(mouseEvent.getX(), mouseEvent.getY())) {
@@ -73,8 +91,15 @@ public class SelectTool extends PaintTool {
         }
     }
 
+    /**
+     * Dynamically draws a selection region or moves selected area depending upon the selection tool's state when the
+     * mouse is being dragged.
+     * @param mouseEvent
+     * The MouseEvent associated with the mouse drag
+     */
     public void onMouseDragged(MouseEvent mouseEvent) {
         pasteCanvasCopy(); // Revert canvas before redrawing
+        mouseDragged = true;
 
         if (regionSelected) {
             // Drag the selected area relative to the mouse movement
@@ -105,60 +130,71 @@ public class SelectTool extends PaintTool {
         }
     }
 
+    /**
+     * Taking a snapshot of the selected region or drawing the moved region in its final spot depending on the state
+     * of the tool. Also changes the state of the tool from region selected mode to not region selected mode and vice
+     * versa.
+     * @param mouseEvent
+     * The MouseEvent associated with the user releasing the mouse after a click or drag
+     */
     public void onMouseReleased(MouseEvent mouseEvent) {
-        if (regionSelected) {
-            // Calculate the actual selection bounds
-            double width = Math.abs(endX - startX);
-            double height = Math.abs(endY - startY);
+        if(mouseDragged) {
+            if (regionSelected) {
+                // Calculate the actual selection bounds
+                double width = Math.abs(endX - startX);
+                double height = Math.abs(endY - startY);
 
-            // Update the drawing only after dragging
-            if (!cutMode) {
-                graphicsContext.setFill(Color.WHITE);
-                graphicsContext.drawImage(selectedArea, drawPointX, drawPointY);
+                // Update the drawing only after dragging
+                if (!cutMode) {
+                    graphicsContext.setFill(Color.WHITE);
+                    graphicsContext.drawImage(selectedArea, drawPointX, drawPointY);
+                } else {
+                    graphicsContext.fillRect(startX, startY, width, height);
+                    graphicsContext.drawImage(selectedArea, drawPointX, drawPointY);
+                }
+
+                // Reset region selection for future selections
+                regionSelected = false;
+
             } else {
-                graphicsContext.fillRect(startX, startY, width, height);
-                graphicsContext.drawImage(selectedArea, drawPointX, drawPointY);
+                // Finalize the selection rectangle and take a snapshot of the area
+                endX = mouseEvent.getX();
+                endY = mouseEvent.getY();
+
+                // Calculate selection bounds
+                //MinX and MinY help to find the part of the rectangle that is closed to the top left corner
+                //This is essential for taking a snapshot properly
+                double minX = Math.min(startX, endX);
+                double minY = Math.min(startY, endY);
+                double width = Math.abs(endX - startX);
+                double height = Math.abs(endY - startY);
+
+                //Only continuing if the bounds for making a selection are valid
+                //Prevents error when a drag is made but the region selected has any dimensions of 0
+                //This error is really just associated with odd JavaFX behavior with detecting when the mouse has been
+                //dragged
+                if(width > 0 && height > 0) {
+                    // Draw the selection rectangle
+                    graphicsContext.strokeRect(minX, minY, width, height);
+
+                    // Take a snapshot of the area
+                    SnapshotParameters selectionParameters = new SnapshotParameters();
+                    selectionParameters.setViewport(new Rectangle2D(minX, minY, width, height));
+                    selectedArea = new WritableImage((int) width, (int) height);
+                    graphicsContext.getCanvas().snapshot(selectionParameters, selectedArea);
+
+                    // Set start and end points
+                    //The start and end points are updated to account that they need bee formatted with startX being upper left
+                    //and endX being the lower right corner of the selection.
+                    startX = minX;
+                    startY = minY;
+                    endX = minX + width;
+                    endY = minY + height;
+
+                    regionSelected = true; // Mark the region as selected
+                }
             }
-
-            // Reset region selection for future selections
-            regionSelected = false;
-
-        } else {
-            // Finalize the selection rectangle and take a snapshot of the area
-            endX = mouseEvent.getX();
-            endY = mouseEvent.getY();
-
-            // Calculate selection bounds
-            //MinX and MinY help to find the part of the rectangle that is closed to the top left corner
-            //This is essential for taking a snapshot properly
-            double minX = Math.min(startX, endX);
-            double minY = Math.min(startY, endY);
-            double width = Math.abs(endX - startX);
-            double height = Math.abs(endY - startY);
-
-            // Draw the selection rectangle
-            graphicsContext.strokeRect(minX, minY, width, height);
-
-            // Take a snapshot of the area
-            SnapshotParameters selectionParameters = new SnapshotParameters();
-            selectionParameters.setViewport(new Rectangle2D(minX, minY, width, height));
-            selectedArea = new WritableImage((int) width, (int) height);
-            graphicsContext.getCanvas().snapshot(selectionParameters, selectedArea);
-
-            // Set start and end points
-            //The start and end points are updated to account that they need bee formatted with startX being upper left
-            //and endX being the lower right corner of the selection.
-            startX = minX;
-            startY = minY;
-            endX = minX + width;
-            endY = minY + height;
-
-            regionSelected = true; // Mark the region as selected
         }
-    }
-
-    public Image getShapeIcon() {
-        return null;
     }
 
     private boolean isWithinSelectedRegion(double x, double y) {
@@ -166,10 +202,30 @@ public class SelectTool extends PaintTool {
         return (x >= startX && x <= endX && y >= startY && y <= endY);
     }
 
+    /**
+     * An unused method that would otherwise provide a select tool icon. This method is not used because toggle button
+     * icons are handled by scene builder.
+     * @return
+     * Normally an Image object, in this case, null
+     */
+    public Image getShapeIcon() {
+        return null;
+    }
+
+    /**
+     * A basic toString function for the select tool
+     * @return
+     * The String "Select Area"
+     */
     public String toString() {
         return "Select Area";
     }
 
+    /**
+     * Sets the select tool to run in cut mode or copy mode.
+     * @param cutMode
+     * True indicates cut mode will be active and false indicates copy mode will be active.
+     */
     public void setCutMode(boolean cutMode) {
         this.cutMode = cutMode;
     }

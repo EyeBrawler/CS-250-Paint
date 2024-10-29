@@ -5,6 +5,10 @@ import javafx.scene.input.MouseEvent;
 
 import java.io.InputStream;
 
+/**
+ * A paint tool designed to draw a traditional star that can be rotated. When rotated a specific angles, it can draw a
+ * "shooting star."
+ */
 public class StarTool extends PaintTool {
     double[] xPoints;
     double[] yPoints;
@@ -12,12 +16,20 @@ public class StarTool extends PaintTool {
     double starCenterY;
     static final int NUMBER_OF_VERTICES = 10;
 
+    /**
+     * Constructs a StarToolObject and prepares it for drawing a star/shooting star
+     */
     public StarTool() {
         //Initializing the arrays to have a size of 10 for each point of the star
         xPoints = new double[NUMBER_OF_VERTICES];
         yPoints = new double[NUMBER_OF_VERTICES];
     }
 
+    /**
+     * Handles a user's initial mouse press when drawing a star
+     * @param mouseEvent
+     * The MouseEvent associated with the user's click
+     */
     public void onMousePressed(MouseEvent mouseEvent) {
         //Where the user clicks will be assigned to the star center variables
         starCenterX = mouseEvent.getX();
@@ -30,6 +42,11 @@ public class StarTool extends PaintTool {
 
     }
 
+    /**
+     * Handles the dynamic redrawing for a star
+     * @param mouseEvent
+     * The MouseEvent associated with the mouse drag
+     */
     public void onMouseDragged(MouseEvent mouseEvent) {
         //Load Copy As Preview of star may have been seen before (very likely)
         pasteCanvasCopy();
@@ -42,6 +59,11 @@ public class StarTool extends PaintTool {
 
     }
 
+    /**
+     * Draws the shooting star in its final position
+     * @param mouseEvent
+     * The MouseEvent associated with the user releasing the mouse after a click or drag
+     */
     public void onMouseReleased(MouseEvent mouseEvent) {
         //Load Copy As Preview of star may have been seen before (very likely)
         pasteCanvasCopy();
@@ -53,18 +75,7 @@ public class StarTool extends PaintTool {
         graphicsContext.strokePolygon(xPoints, yPoints, NUMBER_OF_VERTICES);
     }
 
-    public Image getShapeIcon() {
-        InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Star.png");
-
-        if (resourceStream == null) {
-            System.out.println("Resource not found: /cs250/paint/icons/Star.png");
-            return null;
-        }
-
-        return new Image(resourceStream);
-    }
-
-    public void calculateStar(MouseEvent mouseEvent) {
+    private void calculateStar(MouseEvent mouseEvent) {
         //See line below for variables use
         final int SUCCESSIVE_VERTEX_ANGLE = 36;
 
@@ -104,6 +115,27 @@ public class StarTool extends PaintTool {
 
     }
 
+    /**
+     * Retrieves the star tool icon from project resources
+     * @return
+     * An image object containing the star tool icon.
+     */
+    public Image getShapeIcon() {
+        InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Star.png");
+
+        if (resourceStream == null) {
+            System.out.println("Resource not found: /cs250/paint/icons/Star.png");
+            return null;
+        }
+
+        return new Image(resourceStream);
+    }
+
+    /**
+     * A basic toString function for the star tool
+     * @return
+     * The String "Star"
+     */
     public String toString() {
         return "Star";
     }

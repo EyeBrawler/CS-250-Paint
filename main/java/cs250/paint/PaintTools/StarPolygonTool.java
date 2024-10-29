@@ -5,6 +5,9 @@ import javafx.scene.input.MouseEvent;
 
 import java.io.InputStream;
 
+/**
+ * A paint tool designed to draw a star with any number of convex points to the canvas.
+ */
 public class StarPolygonTool extends PaintTool{
     //Arrays to store point values
     private double[] xPoints;
@@ -18,6 +21,12 @@ public class StarPolygonTool extends PaintTool{
     //Variable to store the number of the star will have
     private int numberOfPoints;
 
+    /**
+     * Handles a user's initial mouse press for drawing any star and ensuring the tool's attributes are up to date upon
+     * a user's click. The area initially clicked will be the center of the star.
+     * @param mouseEvent
+     * The MouseEvent associated with the user's click
+     */
     public void onMousePressed(MouseEvent mouseEvent) {
         //Resetting the arrays after each click as their size can change
         xPoints = new double[numberOfPoints * 2];
@@ -32,6 +41,11 @@ public class StarPolygonTool extends PaintTool{
         copyCanvas(); //For live draw
     }
 
+    /**
+     * Handles the dynamic redrawing for any star
+     * @param mouseEvent
+     * The MouseEvent associated with the mouse drag
+     */
     public void onMouseDragged(MouseEvent mouseEvent) {
         pasteCanvasCopy();
 
@@ -46,12 +60,17 @@ public class StarPolygonTool extends PaintTool{
         graphicsContext.strokePolygon(xPoints, yPoints, numberOfPoints * 2);
     }
 
+    /**
+     * Draws the final star to the canvas when the mouse is released
+     * @param mouseEvent
+     * The MouseEvent associated with the user releasing the mouse after a click or drag
+     */
     public void onMouseReleased(MouseEvent mouseEvent) {
         pasteCanvasCopy();
 
         calculateStarPolygon();
 
-        //Permanently draw the triangle
+        //Permanently draw the star
         graphicsContext.strokePolygon(xPoints, yPoints, numberOfPoints * 2);
 
     }
@@ -78,10 +97,20 @@ public class StarPolygonTool extends PaintTool{
         }
     }
 
+    /**
+     * Sets the number of convex points a drawn star will have.
+     * @param numberOfPoints
+     * An integer value specifying the number of convex points a drawn star will have.
+     */
     public void setNumberOfPoints(int numberOfPoints) {
         this.numberOfPoints = numberOfPoints;
     }
 
+    /**
+     * Retrieves the star polygon tool icon from project resources
+     * @return
+     * An image object containing the star polygon tool icon.
+     */
     public Image getShapeIcon() {
         InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/StarPolygon.png");
 
@@ -93,6 +122,11 @@ public class StarPolygonTool extends PaintTool{
         return new Image(resourceStream);
     }
 
+    /**
+     * A basic toString function for the star polygon tool
+     * @return
+     * The String "Star Polygon"
+     */
     public String toString() {
         return "Star Polygon";
     }

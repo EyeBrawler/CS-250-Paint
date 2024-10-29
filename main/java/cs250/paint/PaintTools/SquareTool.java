@@ -6,10 +6,18 @@ import javafx.scene.input.MouseEvent;
 import java.io.InputStream;
 
 //This class is extremely similar to the RectangleTool class but forces a 1:1 aspect ratio on the rectangle
+/**
+ * A paint tool designed to draw a square to the canvas.
+ */
 public class SquareTool extends PaintTool {
     private double startX, startY, endX;
 
     //SquareTool Events
+    /**
+     * Handles a user's initial mouse press for drawing a square and updates brush parameters in case they were changed.
+     * @param mouseEvent
+     * The MouseEvent associated with the user's click
+     */
     public void onMousePressed(MouseEvent mouseEvent) {
         startX = mouseEvent.getX();
         startY = mouseEvent.getY();
@@ -21,6 +29,11 @@ public class SquareTool extends PaintTool {
         updateBrushParameters();
     }
 
+    /**
+     * Handles the dynamic redrawing for a square
+     * @param mouseEvent
+     * The MouseEvent associated with the mouse drag
+     */
     public void onMouseDragged(MouseEvent mouseEvent) {
         //Reloading the canvas copy
         //Important if the mouse has already been dragged
@@ -34,6 +47,11 @@ public class SquareTool extends PaintTool {
         graphicsContext.strokeRect(startX, startY, endX - startX,endX - startX);
     }
 
+    /**
+     * Draws the final square to the canvas
+     * @param mouseEvent
+     * The MouseEvent associated with the user releasing the mouse after a click or drag
+     */
     public void onMouseReleased(MouseEvent mouseEvent) {
         pasteCanvasCopy();
 
@@ -44,6 +62,11 @@ public class SquareTool extends PaintTool {
 
     }
 
+    /**
+     * Retrieves the square tool icon from project resources
+     * @return
+     * An image object containing the square tool icon.
+     */
     public Image getShapeIcon() {
         InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Square.png");
 
@@ -55,6 +78,11 @@ public class SquareTool extends PaintTool {
         return new Image(resourceStream);
     }
 
+    /**
+     * A basic toString function for the square tool
+     * @return
+     * The String "Square"
+     */
     public String toString() {
         return "Square";
     }

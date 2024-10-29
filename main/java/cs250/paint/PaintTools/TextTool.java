@@ -8,6 +8,10 @@ import javafx.scene.text.Font;
 
 import java.util.Optional;
 
+/**
+ * A paint tool for writing text to the canvas. The user can select a rectangular region where they would like to insert
+ * text and then a dialog box will pop up allowing the user to enter any text.
+ */
 public class TextTool extends PaintTool {
 
     //Variables to store the positions for the rectangle that text will be filled in
@@ -21,6 +25,12 @@ public class TextTool extends PaintTool {
     private static final double TEXT_OFFSET_HEIGHT = 20;
     private static final String FONT_FAMILY = "Times New Roman";
 
+    /**
+     * Stores the initial points for the dashed rectangle indicating where the user would like to type text. This is the
+     * canvas location where they initially click.
+     * @param mouseEvent
+     * The MouseEvent associated with the user's click
+     */
     public void onMousePressed(MouseEvent mouseEvent) {
         // As the user drags, update the endpoint
         startX = mouseEvent.getX();
@@ -34,6 +44,11 @@ public class TextTool extends PaintTool {
         graphicsContext.setStroke(PREVIEW_LINE_COLOR);
     }
 
+    /**
+     * Live draws the preview rectangle based upon where the user drags the mouse
+     * @param mouseEvent
+     * The MouseEvent associated with the mouse drag
+     */
     public void onMouseDragged(MouseEvent mouseEvent) {
         //Revert the canvas before the next preview rectangle is drawn
         pasteCanvasCopy();
@@ -46,6 +61,11 @@ public class TextTool extends PaintTool {
         graphicsContext.strokeRect(startX, startY, endX - startX, endY - startY);
     }
 
+    /**
+     * Pops up a text input dialog box where the user can type text they would like to insert on the canvas.
+     * @param mouseEvent
+     * The MouseEvent associated with the user releasing the mouse after a click or drag
+     */
     public void onMouseReleased(MouseEvent mouseEvent) {
         //Revert the canvas so that the rectangle is only shown temporarily for user aid
         pasteCanvasCopy();
@@ -75,10 +95,21 @@ public class TextTool extends PaintTool {
 
     }
 
+    /**
+     * An unused method that would otherwise provide an icon for the text tool. This method is not used because toggle
+     * button icons are handled by scene builder.
+     * @return
+     * Normally an Image object, in this case, null
+     */
     public Image getShapeIcon() {
         return null;
     }
 
+    /**
+     * A basic toString function for the text tool
+     * @return
+     * The String "Text"
+     */
     public String toString() {
         return "Text";
     }

@@ -5,9 +5,17 @@ import javafx.scene.input.MouseEvent;
 
 import java.io.InputStream;
 
+/**
+ * A paint tool designed to draw a rectangle to the canvas by clicking and dragging in a lower right direction.
+ */
 public class RectangleTool extends PaintTool {
     private double startX, startY, endX, endY;
 
+    /**
+     * Handles a user's initial mouse press for drawing a rectangle
+     * @param mouseEvent
+     * The MouseEvent associated with the user's click
+     */
     public void onMousePressed(MouseEvent mouseEvent) {
         startX = mouseEvent.getX();
         startY = mouseEvent.getY();
@@ -19,6 +27,11 @@ public class RectangleTool extends PaintTool {
         updateBrushParameters();
     }
 
+    /**
+     * Handles the dynamic redrawing for a rectangle
+     * @param mouseEvent
+     * The MouseEvent associated with the mouse drag
+     */
     public void onMouseDragged(MouseEvent mouseEvent) {
         //Reloading the canvas copy
         //Important if the mouse has already been dragged
@@ -30,26 +43,13 @@ public class RectangleTool extends PaintTool {
 
         graphicsContext.strokeRect(startX, startY, endX - startX, endY - startY);
 
-        //In progress solution for getting the rectangle to draw when the mouse is dragged in any direction
-        //Could be reimplemented with the strokePolygon tool instead
-
-        //How to draw the rectangle will vary depending upon the cursor's location relative to the top
-        //left corner of the rectangle. Quadrant IV can be thought of as a default because the strokeRect function
-        //has its last two parameters as the coordinate for the top left of the rectangle
-        /*
-        if(startX < endX && startY < endY) { //Quadrant IV
-            graphicsContext.strokeRect(startX, startY, endX - startX, endY - startY);
-        } else if(startX < endX && startY > endY) { //Quadrant I
-            graphicsContext.strokeRect(startX,startY + endY, startX, startY);
-        } else if(startX > endX && startY > endY) {//Quadrant II
-            graphicsContext.strokeRect(endX - startX,endY - startY, startX, startY);
-        } else { //Quadrant III
-            graphicsContext.strokeRect(endX - startX,endY - startY, startX, startY);
-        }
-         */
-
     }
 
+    /**
+     * Draws the final rectangle to the canvas
+     * @param mouseEvent
+     * The MouseEvent associated with the user releasing the mouse after a click or drag
+     */
     public void onMouseReleased(MouseEvent mouseEvent) {
         pasteCanvasCopy();
 
@@ -62,6 +62,11 @@ public class RectangleTool extends PaintTool {
 
     }
 
+    /**
+     * Retrieves the rectangle tool icon from project resources
+     * @return
+     * An image object containing the rectangle tool icon.
+     */
     public Image getShapeIcon() {
         InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Rectangle.png");
 
@@ -73,6 +78,11 @@ public class RectangleTool extends PaintTool {
         return new Image(resourceStream);
     }
 
+    /**
+     * A basic toString function for the rectangle tool
+     * @return
+     * The String "Rectangle"
+     */
     public String toString() {
         return "Rectangle";
     }

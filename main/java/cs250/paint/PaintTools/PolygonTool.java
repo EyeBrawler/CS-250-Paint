@@ -5,7 +5,9 @@ import javafx.scene.input.MouseEvent;
 
 import java.io.InputStream;
 
-
+/**
+ * A pant tool designed for drawing a regular polygon with any number of sides to the canvas.
+ */
 public class PolygonTool extends PaintTool {
 
     //Arrays to store point values
@@ -20,6 +22,11 @@ public class PolygonTool extends PaintTool {
     //In a regular polygon, the number of sides equals the number points
     private int numberOfSides;
 
+    /**
+     * Handles a user's initial mouse press for drawing any polygon. The area clicked is the center of the polygon.
+     * @param mouseEvent
+     * The MouseEvent associated with the user's click
+     */
     public void onMousePressed(MouseEvent mouseEvent) {
         //Resetting the arrays after each click as their size can change
         xPoints = new double[numberOfSides];
@@ -35,6 +42,11 @@ public class PolygonTool extends PaintTool {
 
     }
 
+    /**
+     * Handles the dynamic redrawing for the polygon
+     * @param mouseEvent
+     * The MouseEvent associated with the mouse drag
+     */
     public void onMouseDragged(MouseEvent mouseEvent) {
         pasteCanvasCopy();
 
@@ -50,6 +62,11 @@ public class PolygonTool extends PaintTool {
 
     }
 
+    /**
+     * Draws the polygon in its final position to the canvas
+     * @param mouseEvent
+     * The MouseEvent associated with the user releasing the mouse after a click or drag
+     */
     public void onMouseReleased(MouseEvent mouseEvent) {
         pasteCanvasCopy();
 
@@ -80,10 +97,20 @@ public class PolygonTool extends PaintTool {
 
     }
 
+    /**
+     * Sets the number of sides the regular polygon drawn will have
+     * @param numberOfSides
+     * An integer value specifying a number of sides
+     */
     public void setNumberOfSides(int numberOfSides) {
         this.numberOfSides = numberOfSides;
     }
 
+    /**
+     * Retrieves the polygon tool icon from project resources.
+     * @return
+     * An image object containing the polygon tool icon.
+     */
     public Image getShapeIcon() {
         InputStream resourceStream = getClass().getResourceAsStream("/cs250/paint/icons/Polygon.png");
 
@@ -95,6 +122,11 @@ public class PolygonTool extends PaintTool {
         return new Image(resourceStream);
     }
 
+    /**
+     * A basic toString function for the polygon tool
+     * @return
+     * The String "Polygon"
+     */
     public String toString() {
         return "Polygon";
     }
